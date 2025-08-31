@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}لوحة الإدارة{% endblock %}
+{% block content %}
+<h2>👨‍💼 لوحة الإدارة</h2>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header">➕ إنشاء مستخدم</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('manager.create_user') }}">
+          <div class="mb-2">
+            <label class="form-label">الاسم</label>
+            <input name="name" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">البريد</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">الدور</label>
+            <select name="role" class="form-select">
+              <option value="employee">موظف</option>
+              <option value="finance">مالية</option>
+              <option value="manager">مدير</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">كلمة المرور</label>
+            <input type="text" name="password" class="form-control" value="123456">
+          </div>
+          <button class="btn btn-primary w-100">إنشاء</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header">👥 المستخدمون</div>
+      <div class="card-body p-0">
+        <table class="table mb-0">
+          <thead><tr><th>#</th><th>الاسم</th><th>البريد</th><th>الدور</th></tr></thead>
+          <tbody>
+            {% for u in users %}
+            <tr><td>{{u.id}}</td><td>{{u.name}}</td><td>{{u.email}}</td><td>{{u.role}}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-4">
+  <div class="card-header">🧾 أحدث المعاملات</div>
+  <div class="card-body p-0">
+    <table class="table mb-0">
+      <thead><tr><th>#</th><th>العنوان</th><th>المبلغ</th><th>المالك</th><th>الحالة</th><th>تعديل الحالة</th></tr></thead>
+      <tbody>
+        {% for t in transactions %}
+        <tr>
+          <td>{{t.id}}</td>
+          <td>{{t.title}}</td>
+          <td>{{"%.2f"|format(t.amount)}}</td>
+          <td>{{t.owner.name}}</td>
+          <td><span class="badge bg-secondary">{{t.status}}</span></td>
+          <td>
+            <form method="post" action="{{ url_for('manager.update_transaction_status', tid=t.id) }}" class="d-flex gap-2">
+              <select name="status" class="form-select form-select-sm">
+                <option {{'selected' if t.status=='pending' else ''}} value="pending">قيد الانتظار</option>
+                <option {{'selected' if t.status=='completed' else ''}} value="completed">مكتملة</option>
+                <option {{'selected' if t.status=='cancelled' else ''}} value="cancelled">ملغاة</option>
+              </select>
+              <button class="btn btn-sm btn-outline-primary">حفظ</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

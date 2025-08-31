@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}الرئيسية - مكتب سند{% endblock %}
+{% block content %}
+<div class="text-center">
+  <h1 class="mb-3">مرحبًا بك في نظام مكتب سند</h1>
+  <p class="lead">سجّل الدخول للوصول إلى لوحتك حسب الدور</p>
+  <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">تسجيل الدخول</a>
+</div>
+{% endblock %}
