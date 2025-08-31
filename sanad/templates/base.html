@@ -16,6 +16,15 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
+          {% if current_user.is_authenticated and ('reports' in request.path or 'تقارير' in request.path or 'report' in request.path) %}
+            {% if current_user.role == 'manager' %}
+              <li class="nav-item"><a class="nav-link btn btn-outline-light px-3 ms-2" href="{{ url_for('manager.dashboard') }}">↩️ رجوع للرئيسية</a></li>
+            {% elif current_user.role == 'finance' %}
+              <li class="nav-item"><a class="nav-link btn btn-outline-light px-3 ms-2" href="{{ url_for('finance.dashboard') }}">↩️ رجوع للرئيسية</a></li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link btn btn-outline-light px-3 ms-2" href="{{ url_for('employees.dashboard') }}">↩️ رجوع للرئيسية</a></li>
+            {% endif %}
+          {% endif %}
           {% if current_user.is_authenticated %}
             {% if current_user.role == 'manager' %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('manager.dashboard') }}">👨‍💼 الإدارة</a></li>
