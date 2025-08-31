@@ -3,6 +3,48 @@
 {% block content %}
 <h2>👨‍💼 لوحة الإدارة</h2>
 
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card text-bg-warning">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-bold">المعاملات المعلقة</div>
+            <div class="display-6">{{ pending_count }}</div>
+          </div>
+          <div class="fs-1">⏳</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-bg-info">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-bold">المعاملات اليوم</div>
+            <div class="display-6">{{ daily_count }}</div>
+          </div>
+          <div class="fs-1">📅</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-bg-success">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-bold">المعاملات المنجزة</div>
+            <div class="display-6">{{ completed_count }}</div>
+          </div>
+          <div class="fs-1">✅</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="row g-4">
   <div class="col-lg-5">
     <div class="card h-100">
