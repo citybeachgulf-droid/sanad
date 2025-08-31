@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from app import db
+from extensions import db
 from models import User, Transaction
 
 manager_bp = Blueprint("manager", __name__)
