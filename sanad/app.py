@@ -1,11 +1,7 @@
 from flask import Flask, render_template, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, current_user
+from flask_login import current_user
 from config import Config
-
-db = SQLAlchemy()
-login_manager = LoginManager()
-login_manager.login_view = "auth.login"
+from extensions import db, login_manager
 
 def create_app():
     app = Flask(__name__)
@@ -13,7 +9,7 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
 
-    # Import models to register with SQLAlchemy
+    # Import models to register with SQLAlchemy (after app and extensions are initialized)
     from models import User
 
     # Blueprints
