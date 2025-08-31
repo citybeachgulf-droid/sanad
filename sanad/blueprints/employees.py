@@ -35,3 +35,34 @@ def create_transaction():
     db.session.commit()
     flash("تم إنشاء المعاملة", "success")
     return redirect(url_for("employees.dashboard"))
+
+@employees_bp.route("/transactions/history")
+@login_required
+def transactions_history():
+    q = Transaction.query
+    if current_user.role == "employee":
+        q = q.filter_by(owner_id=current_user.id)
+    pending_transactions = q.filter_by(status="pending").order_by(Transaction.id.desc()).all()
+    completed_transactions = Transaction.query
+    if current_user.role == "employee":
+        completed_transactions = completed_transactions.filter_by(owner_id=current_user.id)
+    completed_transactions = completed_transactions.filter_by(status="completed").order_by(Transaction.id.desc()).all()
+    return render_template(
+        "transactions_history.html",
+        pending_transactions=pending_transactions,
+        completed_transactions=completed_transactions,
+    )
+
+@employees_bp.route("/transactions/status/<int:tid>", methods=["POST"])
+@login_required
+def update_transaction_status(tid):
+    new_status = request.form.get("status", "pending").strip()
+    tr = Transaction.query.get_or_404(tid)
+    # السماح للمدير/المالية أو مالك المعاملة فقط بالتعديل
+    if not (current_user.role in ("manager", "finance") or tr.owner_id == current_user.id):
+        flash("غير مصرح بتعديل هذه المعاملة", "danger")
+        return redirect(url_for("employees.transactions_history"))
+    tr.status = new_status
+    db.session.commit()
+    flash("تم تحديث الحالة", "success")
+    return redirect(url_for("employees.transactions_history"))
