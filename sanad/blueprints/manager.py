@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from extensions import db
 from models import User, Transaction
+from datetime import datetime, timedelta
 
 manager_bp = Blueprint("manager", __name__)
 
@@ -20,7 +21,26 @@ def check_role():
 def dashboard():
     users = User.query.order_by(User.id.desc()).all()
     transactions = Transaction.query.order_by(Transaction.id.desc()).limit(10).all()
-    return render_template("dashboard_manager.html", users=users, transactions=transactions)
+
+    now = datetime.utcnow()
+    start_of_day = datetime.combine(now.date(), datetime.min.time())
+    end_of_day = start_of_day + timedelta(days=1)
+
+    pending_count = Transaction.query.filter_by(status="pending").count()
+    completed_count = Transaction.query.filter_by(status="completed").count()
+    daily_count = Transaction.query.filter(
+        Transaction.created_at >= start_of_day,
+        Transaction.created_at < end_of_day,
+    ).count()
+
+    return render_template(
+        "dashboard_manager.html",
+        users=users,
+        transactions=transactions,
+        pending_count=pending_count,
+        daily_count=daily_count,
+        completed_count=completed_count,
+    )
 
 @manager_bp.route("/users/create", methods=["POST"])
 @login_required
