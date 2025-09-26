@@ -54,3 +54,33 @@ class Payment(db.Model):
     method = db.Column(db.String(50))
     reference = db.Column(db.String(120))
     paid_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# New domain models for ministries/services and government transactions
+class Ministry(db.Model):
+    __tablename__ = 'ministries'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False, unique=True)
+
+    services = db.relationship('Service', backref='ministry', lazy=True, cascade='all, delete-orphan')
+
+
+class Service(db.Model):
+    __tablename__ = 'services'
+    id = db.Column(db.Integer, primary_key=True)
+    ministry_id = db.Column(db.Integer, db.ForeignKey('ministries.id'), nullable=False)
+    name = db.Column(db.String(200), nullable=False)
+
+
+class TransactionRecord(db.Model):
+    __tablename__ = 'transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    client_name = db.Column(db.String(200), nullable=False)
+    ministry_id = db.Column(db.Integer, db.ForeignKey('ministries.id'), nullable=False)
+    service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    employee_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    ministry = db.relationship('Ministry')
+    service = db.relationship('Service')
