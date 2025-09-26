@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head><meta charset="utf-8"><title>إضافة معاملة</title></head>
+  <body>
+    <h1>إضافة معاملة</h1>
+    <form method="post">
+      {{ form.hidden_tag() }}
+      {{ form.client_id.label }} {{ form.client_id() }}<br>
+      {{ form.service_type.label }} {{ form.service_type() }}<br>
+      {{ form.office.label }} {{ form.office() }}<br>
+      {{ form.fee.label }} {{ form.fee() }}<br>
+      {{ form.details.label }} {{ form.details() }}<br>
+      {{ form.submit() }}
+    </form>
+  </body>
+</html>

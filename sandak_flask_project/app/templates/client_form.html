@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head><meta charset="utf-8"><title>إضافة عميل</title></head>
+  <body>
+    <h1>إضافة عميل</h1>
+    <form method="post">
+      {{ form.hidden_tag() }}
+      {{ form.name.label }} {{ form.name() }}<br>
+      {{ form.phone.label }} {{ form.phone() }}<br>
+      {{ form.email.label }} {{ form.email() }}<br>
+      {{ form.national_id.label }} {{ form.national_id() }}<br>
+      {{ form.submit() }}
+    </form>
+  </body>
+</html>
