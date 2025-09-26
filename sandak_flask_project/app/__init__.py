@@ -26,6 +26,14 @@ def create_app(config_class=Config):
     from app.auth import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
+    # Admin blueprint
+    try:
+        from app.admin import admin_bp
+        app.register_blueprint(admin_bp, url_prefix='/admin')
+    except Exception:
+        # Admin may not be present during early migrations/first run
+        pass
+
     # CLI seed command
     @app.cli.command('seed')
     @with_appcontext

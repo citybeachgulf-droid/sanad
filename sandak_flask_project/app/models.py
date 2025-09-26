@@ -10,6 +10,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     role = db.Column(db.String(20), default='staff')  # admin | staff
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -84,3 +85,4 @@ class TransactionRecord(db.Model):
 
     ministry = db.relationship('Ministry')
     service = db.relationship('Service')
+    employee = db.relationship('User')
