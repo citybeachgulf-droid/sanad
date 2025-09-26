@@ -33,12 +33,36 @@
       </nav>
 
       <div class="content flex-grow-1">
-        <nav class="navbar navbar-light bg-white border-bottom px-3">
+        <nav class="navbar bg-white border-bottom px-3">
           <div class="container-fluid">
+            <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <a class="navbar-brand d-lg-none" href="#">لوحة المدير</a>
-            <span class="navbar-text">مرحباً، {{ current_user.username }}</span>
+            <div class="d-flex align-items-center gap-2 ms-auto">
+              <a class="btn btn-primary" href="{{ url_for('admin.employees_create') }}"><i class="fa fa-user-plus"></i> إضافة موظف</a>
+              <span class="navbar-text d-none d-sm-inline">مرحباً، {{ current_user.username }}</span>
+            </div>
           </div>
         </nav>
+
+        <!-- Mobile offcanvas sidebar -->
+        <div class="offcanvas offcanvas-end d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="mobileSidebarLabel">لوحة المدير</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <ul class="nav nav-pills flex-column gap-1 mb-3">
+              <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/dashboard') %}active{% endif %}" href="{{ url_for('admin.dashboard') }}"><i class="fa-solid fa-gauge"></i> لوحة التحكم</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/employees') %}active{% endif %}" href="{{ url_for('admin.employees_list') }}"><i class="fa-solid fa-users"></i> الموظفون</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/clients') %}active{% endif %}" href="{{ url_for('admin.clients_list') }}"><i class="fa-solid fa-user-group"></i> العملاء</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/transactions') %}active{% endif %}" href="{{ url_for('admin.transactions_list') }}"><i class="fa-solid fa-file-lines"></i> المعاملات</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/settings') %}active{% endif %}" href="{{ url_for('admin.settings') }}"><i class="fa-solid fa-gear"></i> الإعدادات</a></li>
+            </ul>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket"></i> خروج</a>
+          </div>
+        </div>
         <main class="container py-4">
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
