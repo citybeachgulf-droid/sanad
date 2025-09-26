@@ -1,0 +1,18 @@
+{% extends 'admin/layout.html' %}
+{% block title %}تفاصيل المعاملة{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-header bg-white"><h6 class="mb-0">تفاصيل المعاملة #{{ rec.id }}</h6></div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6"><strong>العميل:</strong> {{ rec.client_name }}</div>
+      <div class="col-md-6"><strong>الوزارة:</strong> {{ rec.ministry.name }}</div>
+      <div class="col-md-6"><strong>الخدمة:</strong> {{ rec.service.name }}</div>
+      <div class="col-md-6"><strong>الموظف المسؤول:</strong> {{ rec.employee.username if rec.employee else '-' }}</div>
+      <div class="col-md-6"><strong>التاريخ:</strong> {{ rec.created_at }}</div>
+      <div class="col-md-12"><strong>ملاحظات:</strong> {{ rec.notes or '-' }}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

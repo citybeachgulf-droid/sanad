@@ -1,0 +1,42 @@
+{% extends 'admin/layout.html' %}
+{% block title %}الموظفون{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">الموظفون</h5>
+  <a class="btn btn-primary" href="{{ url_for('admin.employees_create') }}"><i class="fa fa-plus"></i> إضافة موظف جديد</a>
+  </div>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>الاسم</th>
+          <th>البريد</th>
+          <th>الدور</th>
+          <th>تاريخ الإنشاء</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in employees %}
+        <tr>
+          <td>{{ u.username }}</td>
+          <td>{{ u.email }}</td>
+          <td><span class="badge bg-{{ 'danger' if u.role=='admin' else 'secondary' }}">{{ u.role }}</span></td>
+          <td>{{ u.created_at or '' }}</td>
+          <td>
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.employees_edit', user_id=u.id) }}">تعديل</a>
+            <form method="post" action="{{ url_for('admin.employees_delete', user_id=u.id) }}" class="d-inline" onsubmit="return confirm('تأكيد الحذف؟');">
+              <button class="btn btn-sm btn-outline-danger" type="submit">حذف</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted">لا يوجد موظفون</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+ </div>
+{% endblock %}
+
