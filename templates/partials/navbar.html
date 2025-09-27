@@ -1,0 +1,42 @@
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b">
+  <div class="px-4 md:px-6 h-14 flex items-center gap-4">
+    <button class="md:hidden text-gray-600 hover:text-gray-900" aria-label="Toggle sidebar" onclick="document.getElementById('app-sidebar')?.classList.toggle('-translate-x-full')">
+      <i class="fa-solid fa-bars text-xl"></i>
+    </button>
+
+    <div class="flex-1"></div>
+
+    <form method="GET" action="{{ url_for('clients') if request.endpoint!='clients' else url_for('clients') }}" class="hidden md:flex items-center gap-2">
+      <div class="relative">
+        <i class="fa-solid fa-magnifying-glass absolute inset-y-0 right-3 my-auto text-gray-400"></i>
+        <input type="search" name="q" placeholder="ابحث..." value="{{ request.args.get('q','') }}" class="pl-3 pr-10 py-2 rounded-md border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm bg-white" />
+      </div>
+      <button class="hidden md:inline-flex px-3 py-2 rounded-md bg-primary text-white text-sm hover:bg-sky-600">
+        بحث
+      </button>
+    </form>
+
+    <div class="flex items-center gap-3">
+      <button class="relative p-2 text-gray-600 hover:text-gray-900" aria-label="Notifications">
+        <i class="fa-regular fa-bell text-lg"></i>
+        {% if notifications_count and notifications_count > 0 %}
+          <span class="absolute -top-0.5 -left-0.5 w-4 h-4 text-[10px] leading-4 text-center rounded-full bg-red-500 text-white">{{ notifications_count }}</span>
+        {% endif %}
+      </button>
+
+      <div class="h-8 w-px bg-gray-200"></div>
+
+      <div class="flex items-center gap-3">
+        <div class="text-right hidden sm:block">
+          <div class="text-sm font-semibold">{{ current_user.name if current_user else 'المستخدم' }}</div>
+          <div class="text-xs text-gray-500">{{ current_user.role if current_user else 'دور' }}</div>
+        </div>
+        <div class="w-9 h-9 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center text-gray-500">
+          <i class="fa-regular fa-user"></i>
+        </div>
+        <a href="{{ url_for('logout') if request.endpoint!='login' else '#' }}" class="text-sm text-gray-600 hover:text-red-600">تسجيل الخروج</a>
+      </div>
+    </div>
+  </div>
+</header>
+
