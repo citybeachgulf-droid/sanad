@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from app import db, login
@@ -10,6 +11,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     role = db.Column(db.String(20), default='staff')  # admin | staff
+    permissions = db.Column(db.Text, default='{}', nullable=False)  # JSON string of granular permissions
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def set_password(self, password):
@@ -17,6 +19,28 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def get_permissions(self):
+        """Return permissions as a dict. Admin implicitly has all permissions."""
+        try:
+            return json.loads(self.permissions or '{}')
+        except Exception:
+            return {}
+
+    def set_permissions(self, permissions_dict):
+        """Persist permissions dict as JSON string."""
+        try:
+            self.permissions = json.dumps(permissions_dict or {})
+        except Exception:
+            # Fallback to empty permissions on serialization error
+            self.permissions = '{}'
+
+    def has_permission(self, permission_key):
+        """Check if user has a specific granular permission. Admin always true."""
+        if self.role == 'admin':
+            return True
+        perms = self.get_permissions()
+        return bool(perms.get(permission_key))
 
 
 @login.user_loader
