@@ -1,0 +1,35 @@
+<aside id="app-sidebar" class="fixed md:static inset-y-0 right-0 z-40 w-64 -translate-x-full md:translate-x-0 transition-transform bg-white border-l md:border-l-0 md:border-r">
+  <div class="h-14 border-b flex items-center px-4 md:px-6">
+    <a href="{{ url_for('dashboard') }}" class="flex items-center gap-2 text-gray-900 font-semibold">
+      <i class="fa-solid fa-layer-group text-primary"></i>
+      <span>نظام الإدارة</span>
+    </a>
+  </div>
+  <nav class="p-3 md:p-4 space-y-1 overflow-y-auto h-[calc(100vh-56px)]">
+    <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm {{ 'bg-gray-100 text-gray-900' if request.endpoint=='dashboard' else 'text-gray-700 hover:bg-gray-50' }}">
+      <i class="fa-solid fa-gauge"></i>
+      <span>لوحة التحكم</span>
+    </a>
+    <a href="{{ url_for('employees') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm {{ 'bg-gray-100 text-gray-900' if request.endpoint=='employees' else 'text-gray-700 hover:bg-gray-50' }}">
+      <i class="fa-solid fa-users"></i>
+      <span>الموظفون</span>
+    </a>
+    <a href="{{ url_for('clients') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm {{ 'bg-gray-100 text-gray-900' if request.endpoint=='clients' else 'text-gray-700 hover:bg-gray-50' }}">
+      <i class="fa-regular fa-address-book"></i>
+      <span>العملاء</span>
+    </a>
+    <a href="{{ url_for('transactions') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm {{ 'bg-gray-100 text-gray-900' if request.endpoint=='transactions' else 'text-gray-700 hover:bg-gray-50' }}">
+      <i class="fa-solid fa-arrow-right-arrow-left"></i>
+      <span>المعاملات</span>
+    </a>
+    <a href="{{ url_for('invoices') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm {{ 'bg-gray-100 text-gray-900' if request.endpoint=='invoices' else 'text-gray-700 hover:bg-gray-50' }}">
+      <i class="fa-solid fa-file-invoice-dollar"></i>
+      <span>الفواتير</span>
+    </a>
+    <a href="{{ url_for('reports') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm {{ 'bg-gray-100 text-gray-900' if request.endpoint=='reports' else 'text-gray-700 hover:bg-gray-50' }}">
+      <i class="fa-solid fa-chart-line"></i>
+      <span>التقارير</span>
+    </a>
+  </nav>
+</aside>
+

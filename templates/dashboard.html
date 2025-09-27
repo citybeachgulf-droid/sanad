@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}لوحة التحكم{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm text-gray-500">عدد العملاء</div>
+          <div class="text-2xl font-semibold">{{ stats.clients_count or 0 }}</div>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center">
+          <i class="fa-regular fa-address-book"></i>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm text-gray-500">المعاملات</div>
+          <div class="text-2xl font-semibold">{{ stats.transactions_count or 0 }}</div>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+          <i class="fa-solid fa-arrow-right-arrow-left"></i>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm text-gray-500">الفواتير</div>
+          <div class="text-2xl font-semibold">{{ stats.invoices_count or 0 }}</div>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm text-gray-500">الإيرادات</div>
+          <div class="text-2xl font-semibold">{{ stats.revenue or 0 }}<span class="text-sm text-gray-500"> {{ currency or 'SAR' }}</span></div>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+          <i class="fa-solid fa-sack-dollar"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-2 bg-white rounded-xl border p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-semibold">نظرة عامة</h3>
+        <a href="{{ url_for('reports') }}" class="text-sm text-sky-600 hover:text-sky-700">التقارير</a>
+      </div>
+      <canvas id="overviewChart" height="120"></canvas>
+    </div>
+    <div class="bg-white rounded-xl border p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-semibold">المعاملات الأخيرة</h3>
+        <a href="{{ url_for('transactions') }}" class="text-sm text-sky-600 hover:text-sky-700">عرض الكل</a>
+      </div>
+      <div class="divide-y">
+        {% for tx in recent_transactions or [] %}
+          <div class="py-3 flex items-center justify-between">
+            <div class="text-sm">
+              <div class="font-medium">{{ tx.client_name }}</div>
+              <div class="text-gray-500">{{ tx.date }}</div>
+            </div>
+            <div class="text-sm font-semibold">{{ tx.amount }} {{ currency or 'SAR' }}</div>
+          </div>
+        {% else %}
+          <div class="text-sm text-gray-500 py-6 text-center">لا توجد بيانات</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('overviewChart');
+  if (ctx) {
+    const chartData = {{ overview_chart_data|tojson if overview_chart_data else '{"labels":[],"datasets":[]}'|safe }};
+    new Chart(ctx, { type: 'line', data: chartData, options: { responsive: true, maintainAspectRatio: false } });
+  }
+</script>
+{% endblock %}
+
