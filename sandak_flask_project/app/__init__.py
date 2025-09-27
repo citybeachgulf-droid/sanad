@@ -29,6 +29,11 @@ def create_app(config_class=Config):
                 cols = {row[1] for row in res} if res else set()
                 if 'fee' not in cols:
                     conn.execute(text("ALTER TABLE managed_transactions ADD COLUMN fee NUMERIC DEFAULT 0"))
+                # Check for client_phone in transactions (TransactionRecord)
+                res_tr = conn.execute(text("PRAGMA table_info(transactions)")).fetchall()
+                tr_cols = {row[1] for row in res_tr} if res_tr else set()
+                if 'client_phone' not in tr_cols:
+                    conn.execute(text("ALTER TABLE transactions ADD COLUMN client_phone VARCHAR(50)"))
         except Exception:
             # Silently skip to avoid breaking app startup in environments without SQLite PRAGMA
             pass

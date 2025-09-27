@@ -101,6 +101,7 @@ class TransactionRecord(db.Model):
     __tablename__ = 'transactions'
     id = db.Column(db.Integer, primary_key=True)
     client_name = db.Column(db.String(200), nullable=False)
+    client_phone = db.Column(db.String(50))
     ministry_id = db.Column(db.Integer, db.ForeignKey('ministries.id'), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
     notes = db.Column(db.Text)
