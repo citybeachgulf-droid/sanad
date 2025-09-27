@@ -144,6 +144,14 @@ def managed_transactions_add():
     service = request.form.get('service') or ''
     description = request.form.get('description') or ''
     status = request.form.get('status') or 'نشطة'
+    fee_raw = (request.form.get('fee') or '').strip()
+    try:
+        fee_value = float(fee_raw) if fee_raw != '' else 0.0
+        if fee_value < 0:
+            raise ValueError('negative fee')
+    except Exception:
+        flash('قيمة الرسوم غير صحيحة', 'danger')
+        return redirect(url_for('main.managed_transactions_list'))
 
     if authority not in AUTHORITIES or not service or status not in STATUSES:
         flash('الرجاء تعبئة الحقول بشكل صحيح', 'danger')
@@ -153,6 +161,7 @@ def managed_transactions_add():
         authority=authority,
         service=service.strip(),
         description=description.strip(),
+        fee=fee_value,
         status=status,
     )
     db.session.add(row)
@@ -169,6 +178,17 @@ def managed_transactions_edit(item_id):
     service = request.form.get('service') or row.service
     description = request.form.get('description') if request.form.get('description') is not None else row.description
     status = request.form.get('status') or row.status
+    fee_raw = request.form.get('fee')
+    new_fee = row.fee
+    if fee_raw is not None:
+        try:
+            fee_value = float((fee_raw or '').strip() or 0)
+            if fee_value < 0:
+                raise ValueError('negative fee')
+            new_fee = fee_value
+        except Exception:
+            flash('قيمة الرسوم غير صحيحة', 'danger')
+            return redirect(url_for('main.managed_transactions_list'))
 
     if authority not in AUTHORITIES or not service or status not in STATUSES:
         flash('بيانات غير صحيحة', 'danger')
@@ -178,6 +198,7 @@ def managed_transactions_edit(item_id):
     row.service = service.strip()
     row.description = (description or '').strip()
     row.status = status
+    row.fee = new_fee
     db.session.commit()
     flash('تم تحديث المعاملة', 'success')
     return redirect(url_for('main.managed_transactions_list'))

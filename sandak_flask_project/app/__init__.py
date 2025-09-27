@@ -19,6 +19,21 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)
     login.init_app(app)
 
+    # Ensure critical columns exist when running without migrations (e.g., CI/containers)
+    @app.before_first_request
+    def ensure_schema_compatibility():
+        try:
+            from sqlalchemy import text
+            with db.engine.connect() as conn:
+                # Check for fee column in managed_transactions
+                res = conn.execute(text("PRAGMA table_info(managed_transactions)")).fetchall()
+                cols = {row[1] for row in res} if res else set()
+                if 'fee' not in cols:
+                    conn.execute(text("ALTER TABLE managed_transactions ADD COLUMN fee NUMERIC DEFAULT 0"))
+        except Exception:
+            # Silently skip to avoid breaking app startup in environments without SQLite PRAGMA
+            pass
+
     # Blueprints
     from app.routes import main_bp
     app.register_blueprint(main_bp)
