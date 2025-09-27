@@ -23,6 +23,7 @@ def upgrade() -> None:
         sa.Column('authority', sa.String(length=200), nullable=False),
         sa.Column('service', sa.String(length=200), nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
+        sa.Column('fee', sa.Numeric(12, 2), nullable=False, server_default='0'),
         sa.Column('status', sa.String(length=50), nullable=False, server_default='نشطة'),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
@@ -30,6 +31,7 @@ def upgrade() -> None:
     # Drop server_default after creation
     with op.batch_alter_table('managed_transactions') as batch_op:
         batch_op.alter_column('status', server_default=None)
+        batch_op.alter_column('fee', server_default=None)
 
 
 def downgrade() -> None:
