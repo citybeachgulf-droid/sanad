@@ -13,9 +13,9 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
-            login_user(user)
+            login_user(user, remember=bool(form.remember.data))
             return redirect(url_for('main.dashboard'))
-        flash('Invalid username or password')
+        flash('اسم المستخدم أو كلمة المرور غير صحيحة', 'danger')
     return render_template('login.html', form=form)
 
 

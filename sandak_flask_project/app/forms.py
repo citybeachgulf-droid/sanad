@@ -1,11 +1,12 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, DecimalField, TextAreaField
+from wtforms import StringField, PasswordField, SubmitField, DecimalField, TextAreaField, BooleanField
 from wtforms.validators import DataRequired, Email, Optional
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    submit = SubmitField('Sign In')
+    username = StringField('اسم المستخدم', validators=[DataRequired(message='الرجاء إدخال اسم المستخدم')])
+    password = PasswordField('كلمة المرور', validators=[DataRequired(message='الرجاء إدخال كلمة المرور')])
+    remember = BooleanField('تذكرني')
+    submit = SubmitField('تسجيل الدخول')
 
 
 class ClientForm(FlaskForm):
