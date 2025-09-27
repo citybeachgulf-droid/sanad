@@ -8,6 +8,15 @@ from functools import wraps
 admin_bp = Blueprint('admin', __name__, template_folder='templates')
 
 
+# Centralized permission options: (key, label)
+PERMISSION_OPTIONS = [
+    ('clients', 'إدارة العملاء'),
+    ('transactions', 'إدارة المعاملات'),
+    ('payments', 'إدارة المدفوعات'),
+    ('reports', 'عرض التقارير'),
+]
+
+
 def admin_required(view_func):
     @wraps(view_func)
     def wrapper(*args, **kwargs):
@@ -18,6 +27,22 @@ def admin_required(view_func):
         return view_func(*args, **kwargs)
     return login_required(wrapper)
 
+
+def permission_required(permission_key):
+    """Optional decorator to protect views by granular permission.
+
+    Admins are always allowed; otherwise the user must have the given permission.
+    """
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for('auth.login'))
+            if current_user.role != 'admin' and not current_user.has_permission(permission_key):
+                return redirect(url_for('admin.unauthorized'))
+            return view_func(*args, **kwargs)
+        return login_required(wrapper)
+    return decorator
 
 @admin_bp.app_errorhandler(403)
 def forbidden(_e):
@@ -87,7 +112,7 @@ def api_transactions_by_ministry():
 @admin_required
 def employees_list():
     employees = User.query.order_by(User.id.desc()).all()
-    return render_template('admin/employees.html', employees=employees)
+    return render_template('admin/employees.html', employees=employees, permission_options=PERMISSION_OPTIONS)
 
 
 @admin_bp.route('/employees/create', methods=['GET', 'POST'])
@@ -100,17 +125,22 @@ def employees_create():
         role = request.form.get('role') or 'staff'
         if not name or not email or not password:
             flash('الرجاء تعبئة الحقول المطلوبة', 'warning')
-            return render_template('admin/employee_form.html')
+            return render_template('admin/employee_form.html', permission_options=PERMISSION_OPTIONS)
         if User.query.filter((User.username == name) | (User.email == email)).first():
             flash('اسم المستخدم أو البريد مستخدم سابقاً', 'danger')
-            return render_template('admin/employee_form.html')
+            return render_template('admin/employee_form.html', permission_options=PERMISSION_OPTIONS)
         user = User(username=name, email=email, role=role)
         user.set_password(password)
+        # Collect permissions from form
+        perms = {}
+        for key, _label in PERMISSION_OPTIONS:
+            perms[key] = bool(request.form.get(f'perm_{key}'))
+        user.set_permissions(perms)
         db.session.add(user)
         db.session.commit()
         flash('تمت إضافة الموظف', 'success')
         return redirect(url_for('admin.employees_list'))
-    return render_template('admin/employee_form.html')
+    return render_template('admin/employee_form.html', permission_options=PERMISSION_OPTIONS)
 
 
 @admin_bp.route('/employees/<int:user_id>/edit', methods=['GET', 'POST'])
@@ -126,10 +156,15 @@ def employees_edit(user_id):
         password = request.form.get('password')
         if password:
             user.set_password(password)
+        # Update permissions from form
+        perms = {}
+        for key, _label in PERMISSION_OPTIONS:
+            perms[key] = bool(request.form.get(f'perm_{key}'))
+        user.set_permissions(perms)
         db.session.commit()
         flash('تم تحديث بيانات الموظف', 'success')
         return redirect(url_for('admin.employees_list'))
-    return render_template('admin/employee_form.html', user=user)
+    return render_template('admin/employee_form.html', user=user, permission_options=PERMISSION_OPTIONS)
 
 
 @admin_bp.route('/employees/<int:user_id>/delete', methods=['POST'])

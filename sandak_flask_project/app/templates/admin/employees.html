@@ -13,6 +13,7 @@
           <th>الاسم</th>
           <th>البريد</th>
           <th>الدور</th>
+          <th>الصلاحيات</th>
           <th>تاريخ الإنشاء</th>
           <th>إجراءات</th>
         </tr>
@@ -23,6 +24,25 @@
           <td>{{ u.username }}</td>
           <td>{{ u.email }}</td>
           <td><span class="badge bg-{{ 'danger' if u.role=='admin' else 'secondary' }}">{{ u.role }}</span></td>
+          <td>
+            {% if u.role == 'admin' %}
+              <span class="badge bg-success">كل الصلاحيات</span>
+            {% else %}
+              {% set perms = u.get_permissions() %}
+              {% set any = false %}
+              <div class="d-flex flex-wrap gap-1">
+                {% for key, label in permission_options %}
+                  {% if perms.get(key) %}
+                    {% set any = true %}
+                    <span class="badge bg-info text-dark">{{ label }}</span>
+                  {% endif %}
+                {% endfor %}
+                {% if not any %}
+                  <span class="text-muted">بدون صلاحيات</span>
+                {% endif %}
+              </div>
+            {% endif %}
+          </td>
           <td>{{ u.created_at or '' }}</td>
           <td>
             <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.employees_edit', user_id=u.id) }}">تعديل</a>
