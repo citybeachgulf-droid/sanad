@@ -16,6 +16,15 @@ PERMISSION_OPTIONS = [
     ('reports', 'عرض التقارير'),
 ]
 
+# Centralized roles and their Arabic labels
+# Keys are stored in DB, values are shown in UI
+ROLE_OPTIONS = {
+    'admin': 'مدير',
+    'accounting_manager': 'مدير محاسبين',
+    'accountant': 'محاسب',
+    'staff': 'موظف',
+}
+
 
 def admin_required(view_func):
     @wraps(view_func)
@@ -112,7 +121,7 @@ def api_transactions_by_ministry():
 @admin_required
 def employees_list():
     employees = User.query.order_by(User.id.desc()).all()
-    return render_template('admin/employees.html', employees=employees, permission_options=PERMISSION_OPTIONS)
+    return render_template('admin/employees.html', employees=employees, permission_options=PERMISSION_OPTIONS, role_options=ROLE_OPTIONS)
 
 
 @admin_bp.route('/employees/create', methods=['GET', 'POST'])
@@ -123,6 +132,11 @@ def employees_create():
         email = request.form.get('email')
         password = request.form.get('password')
         role = request.form.get('role') or 'staff'
+        # Validate/normalize role
+        if role not in ROLE_OPTIONS:
+            # Accept Arabic labels submitted from client as well
+            reverse_map = {label: key for key, label in ROLE_OPTIONS.items()}
+            role = reverse_map.get(role, 'staff')
         if not name or not email or not password:
             flash('الرجاء تعبئة الحقول المطلوبة', 'warning')
             return render_template('admin/employee_form.html', permission_options=PERMISSION_OPTIONS)
@@ -140,7 +154,7 @@ def employees_create():
         db.session.commit()
         flash('تمت إضافة الموظف', 'success')
         return redirect(url_for('admin.employees_list'))
-    return render_template('admin/employee_form.html', permission_options=PERMISSION_OPTIONS)
+    return render_template('admin/employee_form.html', permission_options=PERMISSION_OPTIONS, role_options=ROLE_OPTIONS)
 
 
 @admin_bp.route('/employees/<int:user_id>/edit', methods=['GET', 'POST'])
@@ -152,6 +166,9 @@ def employees_edit(user_id):
         user.email = request.form.get('email') or user.email
         role = request.form.get('role')
         if role:
+            if role not in ROLE_OPTIONS:
+                reverse_map = {label: key for key, label in ROLE_OPTIONS.items()}
+                role = reverse_map.get(role, user.role)
             user.role = role
         password = request.form.get('password')
         if password:
@@ -164,7 +181,7 @@ def employees_edit(user_id):
         db.session.commit()
         flash('تم تحديث بيانات الموظف', 'success')
         return redirect(url_for('admin.employees_list'))
-    return render_template('admin/employee_form.html', user=user, permission_options=PERMISSION_OPTIONS)
+    return render_template('admin/employee_form.html', user=user, permission_options=PERMISSION_OPTIONS, role_options=ROLE_OPTIONS)
 
 
 @admin_bp.route('/employees/<int:user_id>/delete', methods=['POST'])

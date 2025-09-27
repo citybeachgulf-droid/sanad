@@ -23,7 +23,10 @@
         <tr>
           <td>{{ u.username }}</td>
           <td>{{ u.email }}</td>
-          <td><span class="badge bg-{{ 'danger' if u.role=='admin' else 'secondary' }}">{{ u.role }}</span></td>
+          <td>
+            {% set label = role_options.get(u.role, u.role) %}
+            <span class="badge bg-{{ 'danger' if u.role=='admin' else 'secondary' }}">{{ label }}</span>
+          </td>
           <td>
             {% if u.role == 'admin' %}
               <span class="badge bg-success">كل الصلاحيات</span>
