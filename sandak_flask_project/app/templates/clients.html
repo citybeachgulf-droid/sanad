@@ -1,15 +1,54 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
-  <head><meta charset="utf-8"><title>قائمة العملاء</title></head>
-  <body>
-    <h1>قائمة العملاء</h1>
-    <a href="/clients/new">إضافة عميل</a>
-    <ul>
-    {% for c in clients %}
-      <li>{{ c.name }} - {{ c.phone }}</li>
-    {% else %}
-      <li>لا يوجد عملاء</li>
-    {% endfor %}
-    </ul>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>قائمة العملاء</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  </head>
+  <body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="{{ url_for('main.dashboard') }}">لوحة التحكم</a>
+        <div class="ms-auto">
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-right-from-bracket"></i> خروج</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">قائمة العملاء</h5>
+        <a class="btn btn-primary" href="{{ url_for('main.new_client') }}"><i class="fa fa-plus"></i> إضافة عميل</a>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>الاسم</th>
+                <th>الهاتف</th>
+                <th>البريد</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for c in clients %}
+              <tr>
+                <td>{{ c.name }}</td>
+                <td>{{ c.phone or '-' }}</td>
+                <td>{{ c.email or '-' }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="3" class="text-center text-muted">لا يوجد عملاء</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
