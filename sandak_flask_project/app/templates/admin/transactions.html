@@ -31,6 +31,7 @@
       <thead class="table-light">
         <tr>
           <th>العميل</th>
+          <th>رقم العميل</th>
           <th>الوزارة</th>
           <th>الخدمة</th>
           <th>الموظف المسؤول</th>
@@ -42,6 +43,7 @@
         {% for r in records %}
         <tr>
           <td>{{ r.client_name }}</td>
+          <td>{{ r.client_phone or '-' }}</td>
           <td>{{ r.ministry.name }}</td>
           <td>{{ r.service.name }}</td>
           <td>{{ r.employee.username if r.employee else '-' }}</td>
@@ -49,7 +51,7 @@
           <td><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.transaction_detail', record_id=r.id) }}">عرض التفاصيل</a></td>
         </tr>
         {% else %}
-        <tr><td colspan="6" class="text-center text-muted">لا توجد معاملات</td></tr>
+        <tr><td colspan="7" class="text-center text-muted">لا توجد معاملات</td></tr>
         {% endfor %}
       </tbody>
     </table>

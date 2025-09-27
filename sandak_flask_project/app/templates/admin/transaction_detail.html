@@ -6,6 +6,7 @@
   <div class="card-body">
     <div class="row g-3">
       <div class="col-md-6"><strong>العميل:</strong> {{ rec.client_name }}</div>
+      <div class="col-md-6"><strong>رقم العميل:</strong> {{ rec.client_phone or '-' }}</div>
       <div class="col-md-6"><strong>الوزارة:</strong> {{ rec.ministry.name }}</div>
       <div class="col-md-6"><strong>الخدمة:</strong> {{ rec.service.name }}</div>
       <div class="col-md-6"><strong>الموظف المسؤول:</strong> {{ rec.employee.username if rec.employee else '-' }}</div>
