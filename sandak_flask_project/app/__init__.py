@@ -20,7 +20,6 @@ def create_app(config_class=Config):
     login.init_app(app)
 
     # Ensure critical columns exist when running without migrations (e.g., CI/containers)
-    @app.before_first_request
     def ensure_schema_compatibility():
         try:
             from sqlalchemy import text
@@ -33,6 +32,10 @@ def create_app(config_class=Config):
         except Exception:
             # Silently skip to avoid breaking app startup in environments without SQLite PRAGMA
             pass
+
+    # Run once at startup under the app context (Flask 3.x compatible)
+    with app.app_context():
+        ensure_schema_compatibility()
 
     # Blueprints
     from app.routes import main_bp
