@@ -110,3 +110,14 @@ class TransactionRecord(db.Model):
     ministry = db.relationship('Ministry')
     service = db.relationship('Service')
     employee = db.relationship('User')
+
+
+class ManagedTransaction(db.Model):
+    __tablename__ = 'managed_transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    authority = db.Column(db.String(200), nullable=False)
+    service = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    status = db.Column(db.String(50), nullable=False, default='نشطة')
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
