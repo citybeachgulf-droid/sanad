@@ -33,18 +33,7 @@
       </nav>
 
       <div class="content flex-grow-1">
-        <nav class="navbar bg-white border-bottom px-3">
-          <div class="container-fluid">
-            <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-              <i class="fa-solid fa-bars"></i>
-            </button>
-            <a class="navbar-brand d-lg-none" href="#">لوحة المدير</a>
-            <div class="d-flex align-items-center gap-2 ms-auto">
-              <a class="btn btn-primary" href="{{ url_for('admin.employees_create') }}"><i class="fa fa-user-plus"></i> إضافة موظف</a>
-              <span class="navbar-text d-none d-sm-inline">مرحباً، {{ current_user.username }}</span>
-            </div>
-          </div>
-        </nav>
+        {% include 'admin/_navbar.html' %}
 
         <!-- Mobile offcanvas sidebar -->
         <div class="offcanvas offcanvas-end d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
