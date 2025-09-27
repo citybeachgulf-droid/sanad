@@ -23,8 +23,9 @@
         <div class="col-md-6">
           <label class="form-label">الدور</label>
           <select class="form-select" name="role">
-            <option value="admin" {{ 'selected' if user and user.role=='admin' else '' }}>مدير</option>
-            <option value="staff" {{ 'selected' if user and user.role=='staff' else '' }}>موظف</option>
+            {% for value, label in role_options.items() %}
+            <option value="{{ value }}" {{ 'selected' if user and user.role==value else '' }}>{{ label }}</option>
+            {% endfor %}
           </select>
         </div>
         <div class="col-12">
