@@ -20,19 +20,18 @@ def create_app(config_class=Config):
     login.init_app(app)
 
     # Ensure critical columns exist when running without migrations (e.g., CI/containers)
-    @app.before_first_request
-    def ensure_schema_compatibility():
-        try:
-            from sqlalchemy import text
+    # Flask 3.0 removed before_first_request; perform this once at startup within app context.
+    try:
+        from sqlalchemy import text
+        with app.app_context():
             with db.engine.connect() as conn:
-                # Check for fee column in managed_transactions
                 res = conn.execute(text("PRAGMA table_info(managed_transactions)")).fetchall()
                 cols = {row[1] for row in res} if res else set()
                 if 'fee' not in cols:
                     conn.execute(text("ALTER TABLE managed_transactions ADD COLUMN fee NUMERIC DEFAULT 0"))
-        except Exception:
-            # Silently skip to avoid breaking app startup in environments without SQLite PRAGMA
-            pass
+    except Exception:
+        # Silently skip to avoid breaking app startup in environments without SQLite PRAGMA
+        pass
 
     # Blueprints
     from app.routes import main_bp
