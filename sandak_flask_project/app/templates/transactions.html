@@ -1,0 +1,158 @@
+{% extends 'admin/layout.html' %}
+{% block title %}إدارة المعاملات{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">إدارة المعاملات</h5>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal"><i class="fa fa-plus"></i> إضافة معاملة جديدة</button>
+  
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-5">
+    <select class="form-select" name="authority">
+      <option value="">الكل - الجهة</option>
+      {% for a in authorities %}
+      <option value="{{ a }}" {{ 'selected' if authority==a else '' }}>{{ a }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-5">
+    <select class="form-select" name="status">
+      <option value="">الكل - الحالة</option>
+      {% for s in statuses %}
+      <option value="{{ s }}" {{ 'selected' if status==s else '' }}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-outline-primary w-100" type="submit">تصفية</button>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>الجهة</th>
+          <th>الخدمة</th>
+          <th>الوصف</th>
+          <th>الحالة</th>
+          <th style="width: 160px;">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.authority }}</td>
+          <td>{{ item.service }}</td>
+          <td class="text-muted">{{ item.description or '-' }}</td>
+          <td>
+            <span class="badge {% if item.status=='نشطة' %}bg-success{% elif item.status=='معلقة' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ item.status }}</span>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal{{ item.id }}">تعديل</button>
+            <form class="d-inline" method="post" action="{{ url_for('main.managed_transactions_delete', item_id=item.id) }}" onsubmit="return confirm('هل أنت متأكد من الحذف؟');">
+              <button class="btn btn-sm btn-outline-danger" type="submit">حذف</button>
+            </form>
+          </td>
+        </tr>
+
+        <!-- Edit Modal -->
+        <div class="modal fade" id="editModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">تعديل المعاملة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form method="post" action="{{ url_for('main.managed_transactions_edit', item_id=item.id) }}">
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label class="form-label">الجهة</label>
+                    <select class="form-select" name="authority" required>
+                      {% for a in authorities %}
+                      <option value="{{ a }}" {{ 'selected' if item.authority==a else '' }}>{{ a }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">اسم الخدمة</label>
+                    <input class="form-control" name="service" value="{{ item.service }}" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">وصف مختصر</label>
+                    <textarea class="form-control" name="description" rows="3">{{ item.description or '' }}</textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">الحالة</label>
+                    <select class="form-select" name="status" required>
+                      {% for s in statuses %}
+                      <option value="{{ s }}" {{ 'selected' if item.status==s else '' }}>{{ s }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                  <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted">لا توجد معاملات</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">إضافة معاملة جديدة</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{{ url_for('main.managed_transactions_add') }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">الجهة</label>
+            <select class="form-select" name="authority" required>
+              <option value="" disabled selected>اختر الجهة</option>
+              {% for a in authorities %}
+              <option value="{{ a }}">{{ a }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">اسم الخدمة</label>
+            <input class="form-control" name="service" placeholder="أدخل اسم الخدمة" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">وصف مختصر</label>
+            <textarea class="form-control" name="description" rows="3" placeholder="وصف مختصر للخدمة"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">الحالة</label>
+            <select class="form-select" name="status" required>
+              {% for s in statuses %}
+              <option value="{{ s }}">{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-primary">حفظ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

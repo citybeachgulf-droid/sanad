@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord
+from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord, ManagedTransaction
 from app.forms import ClientForm, TransactionForm
 
 main_bp = Blueprint('main', __name__)
@@ -95,3 +95,99 @@ def api_services_by_ministry():
         return jsonify([])
     items = Service.query.filter_by(ministry_id=ministry_id).order_by(Service.name).all()
     return jsonify([{'id': s.id, 'name': s.name} for s in items])
+
+
+# ----------------------- Managed Transactions (Authority/Service catalog) -----------------------
+
+AUTHORITIES = [
+    'شرطة عمان السلطانية',
+    'وزارة العمل',
+    'وزارة التجارة والصناعة وترويج الاستثمار',
+    'الهيئة العامة للتأمينات الاجتماعية',
+    'وزارة الصحة',
+    'وزارة الإسكان',
+    'البلدية',
+    'هيئة الكهرباء والمياه والاتصالات',
+    'هيئة الاتصالات وتقنية المعلومات',
+]
+
+STATUSES = ['نشطة', 'معلقة', 'منتهية']
+
+
+@main_bp.route('/transactions')
+@login_required
+def managed_transactions_list():
+    authority = request.args.get('authority', '').strip()
+    status = request.args.get('status', '').strip()
+
+    query = ManagedTransaction.query
+    if authority:
+        query = query.filter(ManagedTransaction.authority == authority)
+    if status:
+        query = query.filter(ManagedTransaction.status == status)
+    items = query.order_by(ManagedTransaction.created_at.desc()).all()
+
+    return render_template(
+        'transactions.html',
+        items=items,
+        authorities=AUTHORITIES,
+        statuses=STATUSES,
+        authority=authority,
+        status=status,
+    )
+
+
+@main_bp.route('/transactions/add', methods=['POST'])
+@login_required
+def managed_transactions_add():
+    authority = request.form.get('authority') or ''
+    service = request.form.get('service') or ''
+    description = request.form.get('description') or ''
+    status = request.form.get('status') or 'نشطة'
+
+    if authority not in AUTHORITIES or not service or status not in STATUSES:
+        flash('الرجاء تعبئة الحقول بشكل صحيح', 'danger')
+        return redirect(url_for('main.managed_transactions_list'))
+
+    row = ManagedTransaction(
+        authority=authority,
+        service=service.strip(),
+        description=description.strip(),
+        status=status,
+    )
+    db.session.add(row)
+    db.session.commit()
+    flash('تمت إضافة المعاملة', 'success')
+    return redirect(url_for('main.managed_transactions_list'))
+
+
+@main_bp.route('/transactions/edit/<int:item_id>', methods=['POST'])
+@login_required
+def managed_transactions_edit(item_id):
+    row = ManagedTransaction.query.get_or_404(item_id)
+    authority = request.form.get('authority') or row.authority
+    service = request.form.get('service') or row.service
+    description = request.form.get('description') if request.form.get('description') is not None else row.description
+    status = request.form.get('status') or row.status
+
+    if authority not in AUTHORITIES or not service or status not in STATUSES:
+        flash('بيانات غير صحيحة', 'danger')
+        return redirect(url_for('main.managed_transactions_list'))
+
+    row.authority = authority
+    row.service = service.strip()
+    row.description = (description or '').strip()
+    row.status = status
+    db.session.commit()
+    flash('تم تحديث المعاملة', 'success')
+    return redirect(url_for('main.managed_transactions_list'))
+
+
+@main_bp.route('/transactions/delete/<int:item_id>', methods=['POST'])
+@login_required
+def managed_transactions_delete(item_id):
+    row = ManagedTransaction.query.get_or_404(item_id)
+    db.session.delete(row)
+    db.session.commit()
+    flash('تم حذف المعاملة', 'success')
+    return redirect(url_for('main.managed_transactions_list'))
