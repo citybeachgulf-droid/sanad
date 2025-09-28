@@ -57,30 +57,15 @@ def unauthorized():
 @admin_bp.route('/')
 @admin_required
 def dashboard_redirect():
-    return redirect(url_for('admin.dashboard'))
+    # Unify admin and main dashboards: redirect to the single dashboard
+    return redirect(url_for('main.dashboard'))
 
 
 @admin_bp.route('/dashboard')
 @admin_required
 def dashboard():
-    num_employees = User.query.filter(User.role != 'admin').count()
-    num_clients = Client.query.count()
-    num_transactions = db.session.query(TransactionRecord).count() + db.session.query(Transaction).count()
-    total_payments = db.session.query(db.func.coalesce(db.func.sum(Payment.amount), 0)).scalar() or 0
-    # Task stats
-    todo_count = db.session.query(Task).filter_by(status='todo').count()
-    in_progress_count = db.session.query(Task).filter_by(status='in_progress').count()
-    done_count = db.session.query(Task).filter_by(status='done').count()
-    return render_template(
-        'admin/dashboard.html',
-        num_employees=num_employees,
-        num_clients=num_clients,
-        num_transactions=num_transactions,
-        total_payments=total_payments,
-        todo_count=todo_count,
-        in_progress_count=in_progress_count,
-        done_count=done_count,
-    )
+    # Legacy path: redirect to unified dashboard
+    return redirect(url_for('main.dashboard'))
 
 
 # APIs
