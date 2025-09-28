@@ -39,7 +39,7 @@
           <th>الوصف</th>
           <th>الرسوم</th>
           <th>الحالة</th>
-          <th style="width: 160px;">إجراءات</th>
+          <th style="width: 220px;">إجراءات</th>
         </tr>
       </thead>
       <tbody>
@@ -66,6 +66,9 @@
             <form class="d-inline" method="post" action="{{ url_for('main.managed_transactions_delete', item_id=item.id) }}" onsubmit="return confirm('هل أنت متأكد من الحذف؟');">
               <button class="btn btn-sm btn-outline-danger" type="submit">حذف</button>
             </form>
+            {% if item.status == 'منتهية' and not item.is_paid %}
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#collectModal{{ item.id }}">تحصيل</button>
+            {% endif %}
           </td>
         </tr>
 
@@ -133,6 +136,47 @@
     </table>
   </div>
 </div>
+
+{# Collect Modals #}
+{% for item in items %}
+  {% if item.status == 'منتهية' and not item.is_paid %}
+  <div class="modal fade" id="collectModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">تحصيل رسوم المعاملة</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="post" action="{{ url_for('main.managed_transactions_collect', item_id=item.id) }}">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">المبلغ (ر.ع)</label>
+              <input type="number" step="0.01" min="0.01" class="form-control" name="amount" value="{{ ('%.2f' % item.fee) if item.fee is not none else '0.00' }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">طريقة الدفع</label>
+              <select class="form-select" name="method">
+                <option value="cash">نقدي</option>
+                <option value="card">بطاقة</option>
+                <option value="bank">تحويل بنكي</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">المرجع</label>
+              <input class="form-control" name="reference" placeholder="رقم إشعار أو وصف مختصر">
+            </div>
+            <div class="alert alert-info small">سيتم تسجيل المبلغ كدخل وربطِه بهذه المعاملة.</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+            <button type="submit" class="btn btn-primary">تحصيل وتسجيل</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+{% endfor %}
 
 <!-- Add Modal -->
 <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
