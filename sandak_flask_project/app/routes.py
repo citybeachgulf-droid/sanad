@@ -18,7 +18,8 @@ def index():
 def dashboard():
     # KPIs
     total_clients = Client.query.count()
-    total_transactions = Transaction.query.count()
+    # Include both standard transactions and government transaction records
+    total_transactions = Transaction.query.count() + TransactionRecord.query.count()
 
     # Status counts
     now = datetime.utcnow()
