@@ -229,6 +229,40 @@ def add_gov_transaction():
             ministries = Ministry.query.order_by(Ministry.name).all()
             return render_template('add_transaction.html', ministries=ministries)
 
+        # Upsert client into Clients page (save name and phone)
+        client_row = None
+        if client_phone:
+            # Try to find by exact phone match first
+            client_row = Client.query.filter(Client.phone == client_phone).first()
+        if not client_row and client_name:
+            # Fallback to name match if no phone match
+            client_row = Client.query.filter(Client.name == client_name).first()
+        if not client_row:
+            client_row = Client(name=client_name, phone=client_phone or None)
+            db.session.add(client_row)
+            db.session.flush()
+        else:
+            # Update missing phone on existing client if provided
+            if client_phone and not (client_row.phone and client_row.phone.strip()):
+                client_row.phone = client_phone
+                db.session.flush()
+
+        # Ensure phone contact appears in Clients list badges
+        if client_phone and client_row and client_row.id:
+            exists_contact = (
+                ClientContact.query
+                .filter_by(client_id=client_row.id, kind='phone', value=client_phone)
+                .first()
+            )
+            if not exists_contact:
+                has_primary = ClientContact.query.filter_by(client_id=client_row.id, is_primary=True).first()
+                db.session.add(ClientContact(
+                    client_id=client_row.id,
+                    kind='phone',
+                    value=client_phone,
+                    is_primary=False if has_primary else True,
+                ))
+
         rec = TransactionRecord(
             client_name=client_name,
             client_phone=client_phone or None,
