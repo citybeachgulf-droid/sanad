@@ -15,6 +15,14 @@
       </ul>
       <ul class="navbar-nav ms-auto">
         {% if current_user.is_authenticated %}
+        <li class="nav-item me-2">
+          <a class="btn btn-warning btn-sm" href="{{ url_for('main.add_gov_transaction') }}">
+            <i class="fa fa-plus ms-1"></i>
+            بدء معاملة جديدة
+          </a>
+        </li>
+        {% endif %}
+        {% if current_user.is_authenticated %}
         <li class="nav-item"><span class="navbar-text">مرحباً، {{ current_user.username }}</span></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">خروج</a></li>
         {% else %}
