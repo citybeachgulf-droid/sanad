@@ -8,7 +8,7 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item"><a class="nav-link" href="{{ url_for('main.dashboard') }}">لوحة التحكم</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('main.clients') }}">العملاء</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('main.transactions') }}">المعاملات</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('main.managed_transactions_list') }}">المعاملات</a></li>
         {% if current_user.is_authenticated and current_user.role == 'admin' %}
         <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">الإدارة</a></li>
         {% endif %}

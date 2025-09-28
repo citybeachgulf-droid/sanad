@@ -1,0 +1,44 @@
+ * Serving Flask app '/workspace/sandak_flask_project/run.py'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://172.30.0.2:8001
+[33mPress CTRL+C to quit[0m
+[2025-09-28 14:47:38,389] ERROR in app: Exception on / [GET]
+Traceback (most recent call last):
+  File "/workspace/sandak_flask_project/.venv/lib/python3.13/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/workspace/sandak_flask_project/.venv/lib/python3.13/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/workspace/sandak_flask_project/.venv/lib/python3.13/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/workspace/sandak_flask_project/.venv/lib/python3.13/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/workspace/sandak_flask_project/app/routes.py", line 13, in index
+    return render_template('index.html')
+  File "/workspace/sandak_flask_project/.venv/lib/python3.13/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "/workspace/sandak_flask_project/.venv/lib/python3.13/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+  File "/workspace/sandak_flask_project/.venv/lib/python3.13/site-packages/jinja2/environment.py", line 1295, in render
+    self.environment.handle_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/workspace/sandak_flask_project/.venv/lib/python3.13/site-packages/jinja2/environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/workspace/sandak_flask_project/app/templates/index.html", line 1, in top-level template code
+    {% extends 'layout.html' %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/sandak_flask_project/.venv/lib/python3.13/site-packages/jinja2/environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/workspace/sandak_flask_project/app/templates/layout.html", line 54, in template
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.TemplateAssertionError: block 'content' defined twice
+127.0.0.1 - - [28/Sep/2025 14:47:38] "[35m[1mGET / HTTP/1.1[0m" 500 -
+127.0.0.1 - - [28/Sep/2025 14:49:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Sep/2025 14:49:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Sep/2025 14:49:37] "[32mGET /dashboard HTTP/1.1[0m" 302 -
+127.0.0.1 - - [28/Sep/2025 14:49:41] "[32mGET /dashboard HTTP/1.1[0m" 302 -
+127.0.0.1 - - [28/Sep/2025 14:49:41] "GET /auth/login?next=/dashboard HTTP/1.1" 200 -
