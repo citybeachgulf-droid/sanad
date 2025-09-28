@@ -16,6 +16,29 @@
     {% include 'navbar.html' %}
 
     <main class="container py-4">
+      {% if current_user.is_authenticated %}
+      <div class="row gx-3 gy-4">
+        <aside class="col-md-4 col-lg-3 d-none d-md-block">
+          {% include 'sidebar.html' %}
+        </aside>
+        <section class="col-md-8 col-lg-9">
+          <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ 'warning' if category=='message' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+          </div>
+
+          {% block content %}{% endblock %}
+        </section>
+      </div>
+      {% else %}
       <div class="flash-messages">
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -28,8 +51,8 @@
           {% endif %}
         {% endwith %}
       </div>
-
       {% block content %}{% endblock %}
+      {% endif %}
     </main>
 
     {% block modals %}{% endblock %}

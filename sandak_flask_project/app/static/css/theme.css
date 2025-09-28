@@ -46,3 +46,12 @@ main { min-height: calc(100vh - 56px); }
 .me-auto { margin-inline-end: auto !important; }
 .ms-auto { margin-inline-start: auto !important; }
 
+/* Sidebar layout */
+.sticky-sidebar { position: sticky; top: calc(56px + 1rem); }
+.sticky-sidebar .list-group-item { border: 0; border-bottom: 1px solid rgba(0,0,0,.05); }
+.sticky-sidebar .list-group-item.active,
+.sticky-sidebar .list-group-item:hover { background-color: var(--surface-alt); }
+
+/* Ensure card fills sidebar width nicely */
+aside .card { border-radius: .75rem; }
+

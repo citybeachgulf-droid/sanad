@@ -1,0 +1,29 @@
+<div class="sticky-sidebar">
+  <div class="card shadow-sm border-0">
+    <div class="list-group list-group-flush">
+      <a class="list-group-item list-group-item-action d-flex align-items-center" href="{{ url_for('main.dashboard') }}">
+        <i class="fa-solid fa-gauge ms-2 text-primary"></i>
+        لوحة التحكم
+      </a>
+      <a class="list-group-item list-group-item-action d-flex align-items-center" href="{{ url_for('main.clients') }}">
+        <i class="fa-solid fa-users ms-2 text-primary"></i>
+        العملاء
+      </a>
+      <a class="list-group-item list-group-item-action d-flex align-items-center" href="{{ url_for('main.transactions') }}">
+        <i class="fa-solid fa-file-lines ms-2 text-primary"></i>
+        المعاملات
+      </a>
+      {% if current_user.is_authenticated and current_user.role == 'admin' %}
+      <a class="list-group-item list-group-item-action d-flex align-items-center" href="{{ url_for('admin.dashboard') }}">
+        <i class="fa-solid fa-user-gear ms-2 text-primary"></i>
+        الإدارة
+      </a>
+      <a class="list-group-item list-group-item-action d-flex align-items-center" href="{{ url_for('admin.settings') }}">
+        <i class="fa-solid fa-sliders ms-2 text-primary"></i>
+        الإعدادات
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
