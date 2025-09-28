@@ -197,3 +197,21 @@ class InvoicePayment(db.Model):
     reference = db.Column(db.String(120))
     paid_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
+# ---------------- Income ledger ----------------
+
+class Income(db.Model):
+    __tablename__ = 'incomes'
+    id = db.Column(db.Integer, primary_key=True)
+    source = db.Column(db.String(50), nullable=False)  # e.g., managed_transaction, transaction, invoice
+    source_id = db.Column(db.Integer, nullable=False)
+    amount = db.Column(db.Numeric(12,2), nullable=False)
+    method = db.Column(db.String(50))
+    reference = db.Column(db.String(120))
+    description = db.Column(db.Text)
+    received_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def unique_key(self):
+        return f"{self.source}:{self.source_id}"
+

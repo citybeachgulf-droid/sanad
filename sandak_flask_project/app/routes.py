@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from datetime import datetime, timedelta
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord, ManagedTransaction, ClientContact, ClientNote, Task, Invoice, InvoicePayment
+from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord, ManagedTransaction, ClientContact, ClientNote, Task, Invoice, InvoicePayment, Income
 from app.forms import ClientForm, TransactionForm
 
 main_bp = Blueprint('main', __name__)
@@ -691,4 +691,64 @@ def managed_transactions_delete(item_id):
     db.session.delete(row)
     db.session.commit()
     flash('تم حذف المعاملة', 'success')
+    return redirect(url_for('main.managed_transactions_list'))
+
+
+# ---------------- Managed Transactions: fee collection -> record income ----------------
+
+@main_bp.route('/transactions/<int:item_id>/collect', methods=['POST'])
+@login_required
+def managed_transactions_collect(item_id):
+    row = ManagedTransaction.query.get_or_404(item_id)
+    # Only allow collection when status is completed (منتهية)
+    if row.status != 'منتهية':
+        flash('لا يمكن التحصيل إلا بعد إنهاء المعاملة', 'warning')
+        return redirect(url_for('main.managed_transactions_list'))
+
+    amount = request.form.get('amount', type=float)
+    method = (request.form.get('method') or '').strip()
+    reference = (request.form.get('reference') or '').strip()
+    description = f"{row.authority} - {row.service}"
+
+    if amount is None or amount <= 0:
+        # Default to fee if not provided or invalid
+        try:
+            amount = float(row.fee or 0)
+        except Exception:
+            amount = 0.0
+    if amount <= 0:
+        flash('المبلغ غير صالح للتحصيل', 'danger')
+        return redirect(url_for('main.managed_transactions_list'))
+
+    # Permission: admin only for now
+    if current_user.role != 'admin':
+        flash('هذه العملية تتطلب صلاحية المشرف', 'danger')
+        return redirect(url_for('main.managed_transactions_list'))
+
+    # Prevent duplicate income entries
+    existing_income = Income.query.filter_by(source='managed_transaction', source_id=row.id).first()
+    if existing_income:
+        # Update amount/method/reference if needed
+        existing_income.amount = amount
+        existing_income.method = method or existing_income.method
+        existing_income.reference = reference or existing_income.reference
+        existing_income.description = description
+        existing_income.received_at = datetime.utcnow()
+    else:
+        db.session.add(Income(
+            source='managed_transaction',
+            source_id=row.id,
+            amount=amount,
+            method=method,
+            reference=reference,
+            description=description,
+        ))
+
+    # Update managed transaction payment flags
+    row.is_paid = True
+    row.paid_amount = amount
+    row.paid_at = datetime.utcnow()
+
+    db.session.commit()
+    flash('تم تحصيل الرسوم وتسجيلها كدخل', 'success')
     return redirect(url_for('main.managed_transactions_list'))

@@ -98,6 +98,19 @@ def create_app(config_class=Config):
                         reference VARCHAR(120), paid_at DATETIME
                     )
                 """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS incomes (
+                        id INTEGER PRIMARY KEY,
+                        source VARCHAR(50) NOT NULL,
+                        source_id INTEGER NOT NULL,
+                        amount NUMERIC NOT NULL,
+                        method VARCHAR(50),
+                        reference VARCHAR(120),
+                        description TEXT,
+                        received_at DATETIME,
+                        created_at DATETIME
+                    )
+                """))
         except Exception:
             pass
 
