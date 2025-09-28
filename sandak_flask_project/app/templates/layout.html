@@ -51,7 +51,7 @@
           {% endif %}
         {% endwith %}
       </div>
-      {% block content %}{% endblock %}
+      {{ self.content() }}
       {% endif %}
     </main>
 
