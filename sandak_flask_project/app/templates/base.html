@@ -12,7 +12,6 @@
     {% block head %}{% endblock %}
   </head>
   <body class="bg-light">
-    {% include 'partials/navbar.html' %}
     <main class="container py-4">
       <div class="flash-messages">
         {% with messages = get_flashed_messages(with_categories=true) %}
