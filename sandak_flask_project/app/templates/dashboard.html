@@ -46,7 +46,7 @@
       {% endwith %}
 
       <div class="row g-3 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <div class="card shadow-sm border-0">
             <div class="card-body d-flex align-items-center">
               <div class="flex-shrink-0 ms-3"><i class="fa-solid fa-users text-primary" style="font-size:28px;"></i></div>
@@ -57,7 +57,7 @@
             </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <div class="card shadow-sm border-0">
             <div class="card-body d-flex align-items-center">
               <div class="flex-shrink-0 ms-3"><i class="fa-solid fa-file-lines text-success" style="font-size:28px;"></i></div>
@@ -68,13 +68,24 @@
             </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <div class="card shadow-sm border-0">
             <div class="card-body d-flex align-items-center">
               <div class="flex-shrink-0 ms-3"><i class="fa-solid fa-hourglass-half text-warning" style="font-size:28px;"></i></div>
               <div class="flex-grow-1">
-                <div class="text-muted small">المعاملات المعلقة</div>
-                <div class="h4 mb-0">{{ pending }}</div>
+                <div class="text-muted small">قيد الإجراء</div>
+                <div class="h4 mb-0">{{ in_progress_count }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card shadow-sm border-0">
+            <div class="card-body d-flex align-items-center">
+              <div class="flex-shrink-0 ms-3"><i class="fa-solid fa-triangle-exclamation text-danger" style="font-size:28px;"></i></div>
+              <div class="flex-grow-1">
+                <div class="text-muted small">المعاملات المتأخرة</div>
+                <div class="h4 mb-0">{{ overdue_count }}</div>
               </div>
             </div>
           </div>
@@ -92,7 +103,109 @@
           </div>
         </div>
         <div class="card-body">
-          <p class="text-muted mb-0">استخدم شريط التنقل للانتقال بين العملاء والمعاملات.</p>
+          <form class="row g-2 align-items-end mb-3" method="get">
+            <div class="col-md-3">
+              <label class="form-label small">الحالة</label>
+              <select class="form-select" name="status">
+                <option value="">الكل</option>
+                <option value="new" {{ 'selected' if status=='new' else '' }}>جديدة</option>
+                <option value="in_progress" {{ 'selected' if status=='in_progress' else '' }}>تحت الإجراء</option>
+                <option value="completed" {{ 'selected' if status=='completed' else '' }}>منتهية</option>
+                <option value="overdue" {{ 'selected' if status=='overdue' else '' }}>متأخرة</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small">الموظف المسؤول</label>
+              <select class="form-select" name="employee_id">
+                <option value="">الكل</option>
+                {% for emp in employees %}
+                <option value="{{ emp.id }}" {{ 'selected' if employee_id==emp.id else '' }}>{{ emp.username }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small">نوع المعاملة</label>
+              <input class="form-control" name="service_type" value="{{ service_type or '' }}" placeholder="بحث عن نوع الخدمة">
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-outline-primary w-100" type="submit">تصفية</button>
+            </div>
+          </form>
+
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>العميل</th>
+                  <th>نوع المعاملة</th>
+                  <th>الحالة</th>
+                  <th>المسؤول</th>
+                  <th>تاريخ الإنشاء</th>
+                  <th>الموعد النهائي</th>
+                  <th style="width:220px">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for t in items %}
+                <tr>
+                  <td>{{ t.client.name if t.client else '-' }}</td>
+                  <td>{{ t.service_type }}</td>
+                  <td>
+                    <span class="badge {% if t.status=='completed' %}bg-success{% elif t.status=='in_progress' %}bg-warning text-dark{% elif t.due_date and t.due_date < now %}bg-danger{% else %}bg-secondary{% endif %}">
+                      {% if t.due_date and t.due_date < now and t.status!='completed' %}متأخرة{% else %}
+                        {{ 'منتهية' if t.status=='completed' else ('تحت الإجراء' if t.status=='in_progress' else 'جديدة') }}
+                      {% endif %}
+                    </span>
+                  </td>
+                  <td>{{ t.assigned_user.username if t.assigned_user else '-' }}</td>
+                  <td class="text-muted small">{{ t.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                  <td class="text-muted small">{{ t.due_date.strftime('%Y-%m-%d %H:%M') if t.due_date else '-' }}</td>
+                  <td>
+                    <form class="d-inline" method="post" action="{{ url_for('main.update_transaction_status', transaction_id=t.id) }}">
+                      <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm" name="status" style="width: 140px;">
+                          <option value="new" {{ 'selected' if t.status=='new' else '' }}>جديدة</option>
+                          <option value="in_progress" {{ 'selected' if t.status=='in_progress' else '' }}>تحت الإجراء</option>
+                          <option value="completed" {{ 'selected' if t.status=='completed' else '' }}>منتهية</option>
+                        </select>
+                        <select class="form-select form-select-sm" name="assigned_to" style="width: 140px;">
+                          <option value="">بدون تعيين</option>
+                          {% for emp in employees %}
+                          <option value="{{ emp.id }}" {{ 'selected' if t.assigned_to==emp.id else '' }}>{{ emp.username }}</option>
+                          {% endfor %}
+                        </select>
+                        <input type="datetime-local" class="form-control form-control-sm" name="due_date" value="{{ t.due_date.strftime('%Y-%m-%dT%H:%M') if t.due_date else '' }}" style="width: 200px;">
+                        <button class="btn btn-sm btn-primary" type="submit">تحديث</button>
+                      </div>
+                    </form>
+                    {% if t.due_date and t.due_date < now and t.status!='completed' %}
+                    <form class="d-inline" method="post" action="{{ url_for('main.set_transaction_delay_reason', transaction_id=t.id) }}">
+                      <div class="input-group input-group-sm mt-2" style="max-width: 420px;">
+                        <input class="form-control" name="delay_reason" placeholder="سبب التأخير" required>
+                        <button class="btn btn-outline-danger" type="submit">حفظ السبب</button>
+                      </div>
+                    </form>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center text-muted">لا توجد معاملات مطابقة</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          {% if near_deadline and near_deadline|length > 0 %}
+          <div class="alert alert-warning mt-3" role="alert">
+            <i class="fa-solid fa-bell"></i>
+            هناك معاملات يقترب موعدها النهائي خلال 24 ساعة:
+            <ul class="mb-0 mt-2">
+              {% for t in near_deadline %}
+                <li class="small">{{ t.client.name if t.client else '-' }} — {{ t.service_type }} — {{ t.due_date.strftime('%Y-%m-%d %H:%M') }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>

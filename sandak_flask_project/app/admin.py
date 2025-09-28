@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord
+from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord, Task, Invoice, InvoicePayment
 from functools import wraps
 
 
@@ -67,12 +67,19 @@ def dashboard():
     num_clients = Client.query.count()
     num_transactions = db.session.query(TransactionRecord).count() + db.session.query(Transaction).count()
     total_payments = db.session.query(db.func.coalesce(db.func.sum(Payment.amount), 0)).scalar() or 0
+    # Task stats
+    todo_count = db.session.query(Task).filter_by(status='todo').count()
+    in_progress_count = db.session.query(Task).filter_by(status='in_progress').count()
+    done_count = db.session.query(Task).filter_by(status='done').count()
     return render_template(
         'admin/dashboard.html',
         num_employees=num_employees,
         num_clients=num_clients,
         num_transactions=num_transactions,
         total_payments=total_payments,
+        todo_count=todo_count,
+        in_progress_count=in_progress_count,
+        done_count=done_count,
     )
 
 
@@ -84,12 +91,59 @@ def api_stats():
     num_clients = Client.query.count()
     num_transactions = db.session.query(TransactionRecord).count() + db.session.query(Transaction).count()
     total_payments = float(db.session.query(db.func.coalesce(db.func.sum(Payment.amount), 0)).scalar() or 0)
+    # Performance metrics per employee
+    from sqlalchemy import func
+    perfs = []
+    users = User.query.all()
+    for u in users:
+        total = db.session.query(func.count(Transaction.id)).filter(Transaction.assigned_to == u.id).scalar() or 0
+        completed = db.session.query(func.count(Transaction.id)).filter(Transaction.assigned_to == u.id, Transaction.status == 'completed').scalar() or 0
+        # avg cycle time (completed_at - created_at) in hours
+        rows = db.session.query(Transaction.created_at, Transaction.completed_at).filter(Transaction.assigned_to == u.id, Transaction.completed_at.isnot(None)).all()
+        hours = []
+        for c_at, comp_at in rows:
+            try:
+                hours.append((comp_at - c_at).total_seconds() / 3600.0)
+            except Exception:
+                pass
+        avg_hours = round(sum(hours)/len(hours), 2) if hours else 0.0
+        overdue = db.session.query(func.count(Transaction.id)).filter(Transaction.assigned_to == u.id, Transaction.status != 'completed', Transaction.due_date.isnot(None), Transaction.due_date < func.now()).scalar() or 0
+        perfs.append({'user': u.username, 'total': int(total), 'completed': int(completed), 'avg_hours': float(avg_hours), 'overdue': int(overdue)})
+
     return jsonify({
         'employees': num_employees,
         'clients': num_clients,
         'transactions': num_transactions,
         'payments_total': total_payments,
+        'performance': perfs,
     })
+
+
+@admin_bp.route('/api/financial_summary')
+@admin_required
+def api_financial_summary():
+    from sqlalchemy import func
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    day_ago = now - timedelta(days=1)
+    week_ago = now - timedelta(days=7)
+    month_ago = now - timedelta(days=30)
+
+    def sum_since(dt):
+        return float(db.session.query(func.coalesce(func.sum(InvoicePayment.amount), 0)).filter(InvoicePayment.paid_at >= dt).scalar() or 0)
+
+    daily = sum_since(day_ago)
+    weekly = sum_since(week_ago)
+    monthly = sum_since(month_ago)
+
+    overdue_invoices = (
+        db.session.query(Invoice)
+        .filter(Invoice.status != 'paid')
+        .filter(Invoice.due_date.isnot(None))
+        .filter(Invoice.due_date < now)
+        .count()
+    )
+    return jsonify({'daily_income': daily, 'weekly_income': weekly, 'monthly_income': monthly, 'overdue_invoices': int(overdue_invoices)})
 
 
 @admin_bp.route('/api/transactions_by_ministry')

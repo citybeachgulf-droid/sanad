@@ -64,12 +64,20 @@ class Transaction(db.Model):
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'))
     office = db.Column(db.String(100))
     service_type = db.Column(db.String(150))
-    status = db.Column(db.String(50), default='pending')
+    # new | in_progress | completed | overdue
+    status = db.Column(db.String(50), default='new')
     fee = db.Column(db.Numeric(12,2), default=0)
     details = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # Enhancements
+    assigned_to = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    due_date = db.Column(db.DateTime, nullable=True)
+    started_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    delay_reason = db.Column(db.Text, nullable=True)
 
     payments = db.relationship('Payment', backref='transaction', lazy=True)
+    assigned_user = db.relationship('User', foreign_keys=[assigned_to])
 
 
 class Payment(db.Model):
@@ -126,3 +134,64 @@ class ManagedTransaction(db.Model):
     paid_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# ---------------- Additional domain models ----------------
+
+class ClientContact(db.Model):
+    __tablename__ = 'client_contacts'
+    id = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    kind = db.Column(db.String(20), nullable=False)  # phone | email | whatsapp
+    value = db.Column(db.String(200), nullable=False)
+    is_primary = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ClientNote(db.Model):
+    __tablename__ = 'client_notes'
+    id = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Task(db.Model):
+    __tablename__ = 'tasks'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    status = db.Column(db.String(30), default='todo')  # todo | in_progress | done | blocked
+    priority = db.Column(db.String(20), default='medium')  # low | medium | high
+    due_date = db.Column(db.DateTime, nullable=True)
+    assignee_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    transaction_id = db.Column(db.Integer, db.ForeignKey('transaction.id'), nullable=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Invoice(db.Model):
+    __tablename__ = 'invoices'
+    id = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    transaction_id = db.Column(db.Integer, db.ForeignKey('transaction.id'), nullable=True)
+    total_amount = db.Column(db.Numeric(12,2), nullable=False, default=0)
+    status = db.Column(db.String(20), nullable=False, default='unpaid')  # unpaid | partial | paid | overdue
+    due_date = db.Column(db.DateTime, nullable=True)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class InvoicePayment(db.Model):
+    __tablename__ = 'invoice_payments'
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('invoices.id'), nullable=False)
+    amount = db.Column(db.Numeric(12,2), nullable=False)
+    method = db.Column(db.String(50))
+    reference = db.Column(db.String(120))
+    paid_at = db.Column(db.DateTime, default=datetime.utcnow)
+
