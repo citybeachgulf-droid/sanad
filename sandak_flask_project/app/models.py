@@ -121,5 +121,8 @@ class ManagedTransaction(db.Model):
     description = db.Column(db.Text)
     fee = db.Column(db.Numeric(12,2), nullable=False, default=0)
     status = db.Column(db.String(50), nullable=False, default='نشطة')
+    is_paid = db.Column(db.Boolean, nullable=False, default=False)
+    paid_amount = db.Column(db.Numeric(12,2), nullable=False, default=0)
+    paid_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
