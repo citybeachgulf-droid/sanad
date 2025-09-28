@@ -14,14 +14,14 @@
 <!-- بطاقات الإحصاءات -->
 <div class="row g-3 mb-4">
   {% set stats_cards = [
-    {'title':'عدد العملاء','value':total_clients,'icon':'fa-users','color':'primary'},
-    {'title':'عدد المعاملات','value':total_transactions,'icon':'fa-file-lines','color':'success'},
-    {'title':'قيد الإجراء','value':in_progress_count,'icon':'fa-hourglass-half','color':'warning'},
-    {'title':'المعاملات المتأخرة','value':overdue_count,'icon':'fa-triangle-exclamation','color':'danger'}
+    {'title':'عدد العملاء','value':total_clients,'icon':'fa-users','color':'primary','url': url_for('main.clients')},
+    {'title':'عدد المعاملات','value':total_transactions,'icon':'fa-file-lines','color':'success','url': url_for('main.managed_transactions_list')},
+    {'title':'قيد الإجراء','value':in_progress_count,'icon':'fa-hourglass-half','color':'warning','url': url_for('main.dashboard', status='in_progress')},
+    {'title':'المعاملات المتأخرة','value':overdue_count,'icon':'fa-triangle-exclamation','color':'danger','url': url_for('main.dashboard', status='overdue')}
   ] %}
   {% for card in stats_cards %}
   <div class="col-md-3">
-    <div class="card shadow-sm border-0 border-start border-5 border-{{ card.color }} rounded-3 hover-scale">
+    <div class="card shadow-sm border-0 border-start border-5 border-{{ card.color }} rounded-3 hover-scale position-relative">
       <div class="card-body d-flex align-items-center">
         <div class="flex-shrink-0 me-3 text-{{ card.color }}">
           <i class="fa-solid {{ card.icon }}" style="font-size:32px;"></i>
@@ -31,6 +31,7 @@
           <div class="h4 mb-0">{{ card.value }}</div>
         </div>
       </div>
+      <a href="{{ card.url }}" class="stretched-link"></a>
     </div>
   </div>
   {% endfor %}
