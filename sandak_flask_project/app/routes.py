@@ -61,6 +61,7 @@ def new_transaction():
 def add_gov_transaction():
     if request.method == 'POST':
         client_name = request.form.get('client_name', '').strip()
+        client_phone = (request.form.get('client_phone') or '').strip()
         ministry_id = request.form.get('ministry_id')
         service_id = request.form.get('service_id')
         notes = request.form.get('notes')
@@ -72,6 +73,7 @@ def add_gov_transaction():
 
         rec = TransactionRecord(
             client_name=client_name,
+            client_phone=client_phone or None,
             ministry_id=int(ministry_id),
             service_id=int(service_id),
             notes=notes,
