@@ -15,16 +15,17 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
 
-    # Ensure critical columns exist when running without migrations (e.g., CI/containers)
+    # ---------------- Schema compatibility ----------------
     def ensure_schema_compatibility():
         try:
             from sqlalchemy import text
             with db.engine.connect() as conn:
-                # Check for fee column in managed_transactions
+                # managed_transactions
                 res = conn.execute(text("PRAGMA table_info(managed_transactions)")).fetchall()
                 cols = {row[1] for row in res} if res else set()
                 if 'fee' not in cols:
@@ -35,17 +36,16 @@ def create_app(config_class=Config):
                     conn.execute(text("ALTER TABLE managed_transactions ADD COLUMN paid_amount NUMERIC DEFAULT 0"))
                 if 'paid_at' not in cols:
                     conn.execute(text("ALTER TABLE managed_transactions ADD COLUMN paid_at DATETIME"))
-                # Check for client_phone in transactions (TransactionRecord)
+
+                # transactions (TransactionRecord)
                 res_tr = conn.execute(text("PRAGMA table_info(transactions)")).fetchall()
                 tr_cols = {row[1] for row in res_tr} if res_tr else set()
                 if 'client_phone' not in tr_cols:
                     conn.execute(text("ALTER TABLE transactions ADD COLUMN client_phone VARCHAR(50)"))
 
-                # Transaction enhancements table and columns
+                # transaction enhancements
                 res_tr2 = conn.execute(text("PRAGMA table_info(transaction)")).fetchall()
-                # SQLite default SQLAlchemy table name is 'transaction' for Transaction model
                 tr2_cols = {row[1] for row in res_tr2} if res_tr2 else set()
-                # Add columns if missing
                 if 'assigned_to' not in tr2_cols:
                     conn.execute(text("ALTER TABLE transaction ADD COLUMN assigned_to INTEGER"))
                 if 'due_date' not in tr2_cols:
@@ -59,81 +59,92 @@ def create_app(config_class=Config):
                 if 'status' not in tr2_cols:
                     conn.execute(text("ALTER TABLE transaction ADD COLUMN status VARCHAR(50) DEFAULT 'new'"))
 
-                # Create new tables if not present (idempotent for SQLite)
-                conn.execute(text("CREATE TABLE IF NOT EXISTS client_contacts (id INTEGER PRIMARY KEY, client_id INTEGER NOT NULL, kind VARCHAR(20) NOT NULL, value VARCHAR(200) NOT NULL, is_primary BOOLEAN DEFAULT 0, created_at DATETIME)"))
-                conn.execute(text("CREATE TABLE IF NOT EXISTS client_notes (id INTEGER PRIMARY KEY, client_id INTEGER NOT NULL, content TEXT NOT NULL, created_by INTEGER, created_at DATETIME)"))
-                conn.execute(text("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title VARCHAR(200) NOT NULL, description TEXT, status VARCHAR(30) DEFAULT 'todo', priority VARCHAR(20) DEFAULT 'medium', due_date DATETIME, assignee_id INTEGER, creator_id INTEGER, transaction_id INTEGER, client_id INTEGER, created_at DATETIME, updated_at DATETIME)"))
-                conn.execute(text("CREATE TABLE IF NOT EXISTS invoices (id INTEGER PRIMARY KEY, client_id INTEGER NOT NULL, transaction_id INTEGER, total_amount NUMERIC DEFAULT 0, status VARCHAR(20) DEFAULT 'unpaid', due_date DATETIME, notes TEXT, created_at DATETIME, updated_at DATETIME)"))
-                conn.execute(text("CREATE TABLE IF NOT EXISTS invoice_payments (id INTEGER PRIMARY KEY, invoice_id INTEGER NOT NULL, amount NUMERIC NOT NULL, method VARCHAR(50), reference VARCHAR(120), paid_at DATETIME)"))
+                # Create new tables if not exists
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS client_contacts (
+                        id INTEGER PRIMARY KEY, client_id INTEGER NOT NULL,
+                        kind VARCHAR(20) NOT NULL, value VARCHAR(200) NOT NULL,
+                        is_primary BOOLEAN DEFAULT 0, created_at DATETIME
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS client_notes (
+                        id INTEGER PRIMARY KEY, client_id INTEGER NOT NULL,
+                        content TEXT NOT NULL, created_by INTEGER, created_at DATETIME
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS tasks (
+                        id INTEGER PRIMARY KEY, title VARCHAR(200) NOT NULL,
+                        description TEXT, status VARCHAR(30) DEFAULT 'todo',
+                        priority VARCHAR(20) DEFAULT 'medium',
+                        due_date DATETIME, assignee_id INTEGER, creator_id INTEGER,
+                        transaction_id INTEGER, client_id INTEGER,
+                        created_at DATETIME, updated_at DATETIME
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS invoices (
+                        id INTEGER PRIMARY KEY, client_id INTEGER NOT NULL,
+                        transaction_id INTEGER, total_amount NUMERIC DEFAULT 0,
+                        status VARCHAR(20) DEFAULT 'unpaid', due_date DATETIME,
+                        notes TEXT, created_at DATETIME, updated_at DATETIME
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS invoice_payments (
+                        id INTEGER PRIMARY KEY, invoice_id INTEGER NOT NULL,
+                        amount NUMERIC NOT NULL, method VARCHAR(50),
+                        reference VARCHAR(120), paid_at DATETIME
+                    )
+                """))
         except Exception:
-            # Silently skip to avoid breaking app startup in environments without SQLite PRAGMA
             pass
 
-    # Run once at startup under the app context (Flask 3.x compatible)
+    # Ensure tables exist at app startup
     with app.app_context():
         ensure_schema_compatibility()
-        # Ensure all tables exist
         db.create_all()
 
-    # Blueprints
+    # ---------------- Blueprints ----------------
     from app.routes import main_bp
     app.register_blueprint(main_bp)
 
     from app.auth import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
-    # Admin blueprint
     try:
         from app.admin import admin_bp
         app.register_blueprint(admin_bp, url_prefix='/admin')
-    except Exception:
-        # Admin may not be present during early migrations/first run
+    except ImportError:
         pass
 
-    # CLI seed command
+    # ---------------- CLI Seed Command ----------------
     @app.cli.command('seed')
     @with_appcontext
     def seed_command():
-        """Seed initial ministries and services."""
-        from app import db
+        """Seed ministries, services, users, managed transactions."""
         from app.models import Ministry, Service, User, ManagedTransaction
 
         db.create_all()
 
-        # Create a default employee user if none exists
+        # Create default employee if missing
         if not User.query.filter_by(username='employee').first():
             u = User(username='employee', email='employee@example.com', role='staff')
             u.set_password('password')
             db.session.add(u)
 
+        # Ministries & services
         name_to_services = {
-            'وزارة الإسكان والتخطيط العمراني': [
-                'استخراج سند ملكية', 'نقل ملكية أرض/منزل', 'فرز أرض', 'رهن عقار', 'إصدار كشف مساحة'
-            ],
-            'وزارة العدل والشؤون القانونية': [
-                'تصديق عقود البيع', 'الوكالات العامة والخاصة', 'فسخ العقود', 'توثيق الرهون'
-            ],
-            'وزارة العمل': [
-                'تصريح استقدام عامل', 'تجديد عقد عمل', 'إلغاء تصريح عمل', 'تغيير جهة العمل'
-            ],
-            'شرطة عمان السلطانية': [
-                'تجديد مركبة', 'نقل ملكية', 'استخراج رخصة قيادة', 'إصدار بطاقة', 'تجديد بطاقة', 'إصدار شهادة ميلاد/وفاة'
-            ],
-            'وزارة التجارة والصناعة وترويج الاستثمار': [
-                'تسجيل مؤسسة جديدة', 'تجديد السجل التجاري', 'تعديل بيانات السجل', 'شطب سجل'
-            ],
-            'البلديات': [
-                'تصريح بناء', 'شهادة إتمام بناء', 'تصريح نشاط تجاري', 'تراخيص صحية'
-            ],
-            'وزارة الصحة': [
-                'تصاريح مهن صحية', 'تراخيص منشآت طبية', 'شهادات صحية'
-            ],
-            'وزارة التربية والتعليم': [
-                'معادلة شهادات', 'تصديق شهادات دراسية'
-            ],
-            'الهيئة العامة لسجل القوى العاملة': [
-                'تسجيل باحث عن عمل', 'تحديث بيانات'
-            ],
+            'وزارة الإسكان والتخطيط العمراني': ['استخراج سند ملكية','نقل ملكية أرض/منزل','فرز أرض','رهن عقار','إصدار كشف مساحة'],
+            'وزارة العدل والشؤون القانونية': ['تصديق عقود البيع','الوكالات العامة والخاصة','فسخ العقود','توثيق الرهون'],
+            'وزارة العمل': ['تصريح استقدام عامل','تجديد عقد عمل','إلغاء تصريح عمل','تغيير جهة العمل'],
+            'شرطة عمان السلطانية': ['تجديد مركبة','نقل ملكية','استخراج رخصة قيادة','إصدار بطاقة','تجديد بطاقة','إصدار شهادة ميلاد/وفاة'],
+            'وزارة التجارة والصناعة وترويج الاستثمار': ['تسجيل مؤسسة جديدة','تجديد السجل التجاري','تعديل بيانات السجل','شطب سجل'],
+            'البلديات': ['تصريح بناء','شهادة إتمام بناء','تصريح نشاط تجاري','تراخيص صحية'],
+            'وزارة الصحة': ['تصاريح مهن صحية','تراخيص منشآت طبية','شهادات صحية'],
+            'وزارة التربية والتعليم': ['معادلة شهادات','تصديق شهادات دراسية'],
+            'الهيئة العامة لسجل القوى العاملة': ['تسجيل باحث عن عمل','تحديث بيانات']
         }
 
         for m_name, services in name_to_services.items():
@@ -142,7 +153,6 @@ def create_app(config_class=Config):
                 ministry = Ministry(name=m_name)
                 db.session.add(ministry)
                 db.session.flush()
-            # Ensure services
             for s_name in services:
                 if not Service.query.filter_by(ministry_id=ministry.id, name=s_name).first():
                     db.session.add(Service(ministry_id=ministry.id, name=s_name))
@@ -150,63 +160,32 @@ def create_app(config_class=Config):
         db.session.commit()
         click.echo('Seeded ministries and services.')
 
-        # Seed managed transactions (authorities/services catalog)
+        # Managed transactions catalog
         catalog = {
             'شرطة عمان السلطانية': [
-                ('إصدار بطاقة الأحوال المدنية', 'إصدار بطاقة جديدة للمواطنين.'),
-                ('تجديد بطاقة الأحوال المدنية', 'تجديد البطاقة عند انتهاء صلاحيتها.'),
-                ('إصدار رخصة قيادة', 'إصدار رخصة قيادة جديدة.'),
-                ('تجديد رخصة قيادة', 'تجديد رخصة القيادة المنتهية.'),
-                ('نقل ملكية مركبة', 'تسجيل انتقال ملكية المركبات بين الأشخاص.'),
-                ('دفع المخالفات المرورية', 'دفع الغرامات والمخالفات.'),
-                ('إصدار بلاغ فقدان', 'تسجيل فقدان بطاقة شخصية أو رخصة أو جواز.'),
-                ('خدمات التأشيرات والإقامة', 'استخراج وتجديد الإقامة للوافدين.'),
+                ('إصدار بطاقة الأحوال المدنية','إصدار بطاقة جديدة للمواطنين.'),
+                ('تجديد بطاقة الأحوال المدنية','تجديد البطاقة عند انتهاء صلاحيتها.'),
+                ('إصدار رخصة قيادة','إصدار رخصة قيادة جديدة.'),
+                ('تجديد رخصة قيادة','تجديد رخصة القيادة المنتهية.'),
+                ('نقل ملكية مركبة','تسجيل انتقال ملكية المركبات بين الأشخاص.'),
+                ('دفع المخالفات المرورية','دفع الغرامات والمخالفات.'),
+                ('إصدار بلاغ فقدان','تسجيل فقدان بطاقة شخصية أو رخصة أو جواز.'),
+                ('خدمات التأشيرات والإقامة','استخراج وتجديد الإقامة للوافدين.')
             ],
             'وزارة العمل': [
-                ('إصدار تراخيص العمل', 'منح تصريح عمل جديد للعاملين.'),
-                ('تجديد تراخيص العمل', 'تجديد تراخيص العمل المنتهية.'),
-                ('تسجيل عقود العمل', 'تسجيل عقود العاملين.'),
-                ('نقل الكفالة', 'تحويل كفالة العامل من جهة إلى أخرى.'),
-                ('إنهاء خدمات العمالة', 'إنهاء عقد العمل للموظف أو العامل الوافد.'),
-                ('طلبات استقدام العمالة', 'طلب إدخال عمالة جديدة.'),
+                ('إصدار تراخيص العمل','منح تصريح عمل جديد للعاملين.'),
+                ('تجديد تراخيص العمل','تجديد تراخيص العمل المنتهية.'),
+                ('تسجيل عقود العمل','تسجيل عقود العاملين.'),
+                ('نقل الكفالة','تحويل كفالة العامل من جهة إلى أخرى.'),
+                ('إنهاء خدمات العمالة','إنهاء عقد العمل للموظف أو العامل الوافد.'),
+                ('طلبات استقدام العمالة','طلب إدخال عمالة جديدة.')
             ],
             'وزارة التجارة والصناعة وترويج الاستثمار': [
-                ('تسجيل المؤسسات الفردية', 'إنشاء سجل تجاري لمؤسسة فردية.'),
-                ('تسجيل الشركات', 'إنشاء سجل تجاري لشركة جديدة.'),
-                ('تجديد السجلات التجارية', 'تجديد السجل التجاري القائم.'),
-                ('تعديل بيانات السجل التجاري', 'تحديث معلومات السجل التجاري.'),
-            ],
-            'الهيئة العامة للتأمينات الاجتماعية': [
-                ('تسجيل موظفين جدد', 'إضافة موظفين لنظام التأمينات.'),
-                ('تحديث بيانات المؤمن عليهم', 'تعديل معلومات الموظفين.'),
-                ('استخراج شهادات الاشتراك', 'إصدار شهادات للمؤمن عليهم.'),
-                ('استفسارات المستحقات والمعاشات', 'الاستعلام عن المعاشات.'),
-            ],
-            'وزارة الصحة': [
-                ('إصدار وتجديد البطاقة الصحية للعاملين', None),
-                ('تسجيل شهادات التطعيم', None),
-                ('دفع رسوم بعض الخدمات الصحية', None),
-            ],
-            'وزارة الإسكان': [
-                ('استخراج خرائط الأراضي', None),
-                ('تحديث بيانات الملكية العقارية', None),
-                ('متابعة طلبات المنح والإفراغات', None),
-            ],
-            'البلدية': [
-                ('إصدار وتجديد التراخيص البلدية للمحلات', None),
-                ('استخراج شهادات صحية للعمالة', None),
-                ('دفع المخالفات البلدية', None),
-            ],
-            'هيئة الكهرباء والمياه والاتصالات': [
-                ('دفع فواتير الكهرباء والمياه', None),
-                ('الاستفسار عن الاشتراكات', None),
-                ('طلبات توصيل جديدة', None),
-            ],
-            'هيئة الاتصالات وتقنية المعلومات': [
-                ('دفع فواتير شركات الاتصالات (عمانتل، أوريدو)', None),
-                ('إعادة شحن الرصيد', None),
-                ('الاشتراك في بعض الخدمات الإلكترونية', None),
-            ],
+                ('تسجيل المؤسسات الفردية','إنشاء سجل تجاري لمؤسسة فردية.'),
+                ('تسجيل الشركات','إنشاء سجل تجاري لشركة جديدة.'),
+                ('تجديد السجلات التجارية','تجديد السجل التجاري القائم.'),
+                ('تعديل بيانات السجل التجاري','تحديث معلومات السجل التجاري.')
+            ]
         }
 
         created = 0

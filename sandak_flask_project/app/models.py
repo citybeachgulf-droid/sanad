@@ -44,8 +44,10 @@ class User(UserMixin, db.Model):
 
 
 @login.user_loader
-def load_user(id):
-    return User.query.get(int(id))
+def load_user(user_id):
+    from app.models import User
+    return User.query.get(int(user_id))
+
 
 
 class Client(db.Model):
