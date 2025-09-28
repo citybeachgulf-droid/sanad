@@ -21,7 +21,7 @@
       </a>
       <a class="list-group-item list-group-item-action d-flex align-items-center" href="{{ url_for('main.transactions_new') }}">
         <i class="fa-solid fa-star ms-2 text-primary"></i>
-        المعاملات الجديدة
+        المعاملات التي تم إنشاؤها من إضافة معاملة جديدة
       </a>
       {% if current_user.is_authenticated and current_user.role == 'admin' %}
       <a class="list-group-item list-group-item-action d-flex align-items-center" href="{{ url_for('admin.dashboard') }}">
