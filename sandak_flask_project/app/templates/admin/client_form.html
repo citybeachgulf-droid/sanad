@@ -1,0 +1,34 @@
+{% extends 'layout.html' %}
+{% block title %}إضافة عميل{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-header bg-white"><h6 class="mb-0">إضافة عميل جديد</h6></div>
+  <div class="card-body">
+    <form method="post">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">الاسم</label>
+          <input class="form-control" name="name" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">الهاتف</label>
+          <input class="form-control" name="phone">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">البريد</label>
+          <input type="email" class="form-control" name="email">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">الرقم المدني</label>
+          <input class="form-control" name="national_id">
+        </div>
+      </div>
+      <div class="d-flex justify-content-end mt-3">
+        <a href="{{ url_for('admin.clients_list') }}" class="btn btn-outline-secondary">إلغاء</a>
+        <button class="btn btn-primary ms-2" type="submit">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

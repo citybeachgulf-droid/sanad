@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% block title %}العملاء{% endblock %}
+{% block content %}
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-4">
+    <input class="form-control" placeholder="بحث بالاسم أو الهاتف" name="q" value="{{ q }}">
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-outline-primary w-100" type="submit">بحث</button>
+  </div>
+  <div class="col-md-6 text-end">
+    <a class="btn btn-primary" href="{{ url_for('admin.clients_create') }}"><i class="fa fa-plus"></i> إضافة عميل</a>
+  </div>
+ </form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>الاسم</th>
+          <th>الهاتف</th>
+          <th>البريد</th>
+          <th>الرقم المدني</th>
+          <th>التاريخ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in clients %}
+        <tr>
+          <td>{{ c.name }}</td>
+          <td>{{ c.phone or '-' }}</td>
+          <td>{{ c.email or '-' }}</td>
+          <td>{{ c.national_id or '-' }}</td>
+          <td>{{ c.created_at }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted">لا يوجد عملاء</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,77 @@
+{% extends 'layout.html' %}
+{% block title %}تقارير مخصصة{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">التقارير المخصصة</h5>
+  <form method="post" action="{{ url_for('main.notify_due_soon') }}">
+    <button class="btn btn-outline-warning"><i class="fa fa-bell"></i> إرسال تنبيهات للمعاملات القريبة</button>
+  </form>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-3">
+    <label class="form-label small">الموظف</label>
+    <select class="form-select" name="employee_id">
+      <option value="">الكل</option>
+      {% for e in employees %}
+      <option value="{{ e.id }}" {{ 'selected' if employee_id==e.id else '' }}>{{ e.username }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <label class="form-label small">العميل</label>
+    <select class="form-select" name="client_id">
+      <option value="">الكل</option>
+      {% for c in clients %}
+      <option value="{{ c.id }}" {{ 'selected' if client_id==c.id else '' }}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <label class="form-label small">من تاريخ</label>
+    <input type="date" class="form-control" name="date_from" value="{{ date_from or '' }}">
+  </div>
+  <div class="col-md-3">
+    <label class="form-label small">إلى تاريخ</label>
+    <input type="date" class="form-control" name="date_to" value="{{ date_to or '' }}">
+  </div>
+  <div class="col-md-3">
+    <label class="form-label small">الحالة</label>
+    <select class="form-select" name="tx_status">
+      <option value="">الكل</option>
+      {% for s in ['new','in_progress','completed'] %}
+      <option value="{{ s }}" {{ 'selected' if tx_status==s else '' }}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2 align-self-end">
+    <button class="btn btn-outline-primary w-100" type="submit">تصفية</button>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>العميل</th><th>الخدمة</th><th>الحالة</th><th>الموظف</th><th>تاريخ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in items %}
+        <tr>
+          <td>{{ t.client.name if t.client else '-' }}</td>
+          <td>{{ t.service_type }}</td>
+          <td>{{ t.status }}</td>
+          <td>{{ t.assigned_user.username if t.assigned_user else '-' }}</td>
+          <td class="text-muted small">{{ t.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted">لا توجد نتائج</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

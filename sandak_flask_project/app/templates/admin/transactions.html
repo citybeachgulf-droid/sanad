@@ -1,0 +1,61 @@
+{% extends 'layout.html' %}
+{% block title %}المعاملات{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">المعاملات</h5>
+  <a class="btn btn-primary" href="{{ url_for('main.add_gov_transaction') }}"><i class="fa fa-plus"></i> إضافة معاملة</a>
+</div>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-4">
+    <select class="form-select" name="ministry_id">
+      <option value="">الكل - الوزارة</option>
+      {% for m in ministries %}
+      <option value="{{ m.id }}" {{ 'selected' if ministry_id==m.id else '' }}>{{ m.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <input type="date" class="form-control" name="date_from" value="{{ date_from or '' }}">
+  </div>
+  <div class="col-md-3">
+    <input type="date" class="form-control" name="date_to" value="{{ date_to or '' }}">
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-outline-primary w-100" type="submit">تصفية</button>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>العميل</th>
+          <th>رقم العميل</th>
+          <th>الوزارة</th>
+          <th>الخدمة</th>
+          <th>الموظف المسؤول</th>
+          <th>التاريخ</th>
+          <th>التفاصيل</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.client_name }}</td>
+          <td>{{ r.client_phone or '-' }}</td>
+          <td>{{ r.ministry.name }}</td>
+          <td>{{ r.service.name }}</td>
+          <td>{{ r.employee.username if r.employee else '-' }}</td>
+          <td>{{ r.created_at }}</td>
+          <td><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.transaction_detail', record_id=r.id) }}">عرض التفاصيل</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted">لا توجد معاملات</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
