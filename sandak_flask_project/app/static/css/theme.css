@@ -1,0 +1,57 @@
+:root {
+  --brand-primary: #0d6efd;
+  --brand-secondary: #6c757d;
+  --brand-success: #198754;
+  --brand-warning: #ffc107;
+  --brand-danger: #dc3545;
+  --surface: #ffffff;
+  --surface-alt: #f8f9fa;
+}
+
+html[dir="rtl"] body {
+  font-family: "Cairo", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+/* Cards and containers */
+.card {
+  border-radius: .75rem;
+}
+
+.card-header {
+  background-color: var(--surface) !important;
+}
+
+/* Table tweaks */
+.table thead th {
+  white-space: nowrap;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Status dots */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-inline-start: 6px;
+}
+.status-new { background: var(--brand-secondary); }
+.status-inprogress { background: var(--brand-warning); }
+.status-completed { background: var(--brand-success); }
+.status-overdue { background: var(--brand-danger); }
+
+/* Offcanvas sidebar width for RTL */
+.offcanvas-end { width: 260px; }
+
+/* Fix possible overflow on small screens */
+main { min-height: calc(100vh - 56px); }
+
+/* Alerts spacing */
+.flash-messages > .alert { margin-bottom: .5rem; }
+
+/* Accessibility: focus outline visible */
+:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+

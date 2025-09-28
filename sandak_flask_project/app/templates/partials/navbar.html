@@ -1,0 +1,31 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('main.dashboard') }}">سند</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'main.dashboard' else '' }}" href="{{ url_for('main.dashboard') }}"><i class="fa-solid fa-gauge"></i> لوحة التحكم</a></li>
+        <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'main.clients' else '' }}" href="{{ url_for('main.clients') }}"><i class="fa-solid fa-users"></i> العملاء</a></li>
+        <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'main.managed_transactions_list' else '' }}" href="{{ url_for('main.managed_transactions_list') }}"><i class="fa-solid fa-file-lines"></i> المعاملات</a></li>
+        <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'main.add_gov_transaction' else '' }}" href="{{ url_for('main.add_gov_transaction') }}"><i class="fa-solid fa-plus"></i> إضافة معاملة حكومية</a></li>
+      </ul>
+      <form class="d-none d-lg-flex" role="search" method="get" action="{{ url_for('main.clients') }}" aria-label="بحث عام">
+        <div class="input-group input-group-sm">
+          <input class="form-control" name="q" placeholder="ابحث عن عميل" aria-label="بحث">
+          <button class="btn btn-light" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+      </form>
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+        {% if current_user.is_authenticated %}
+          <li class="nav-item d-flex align-items-center text-white small me-2">مرحباً، {{ current_user.username }}</li>
+          <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-right-from-bracket"></i> خروج</a></li>
+        {% else %}
+          <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="{{ url_for('auth.login') }}"><i class="fa-solid fa-right-to-bracket"></i> دخول</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
