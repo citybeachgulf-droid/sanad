@@ -8,45 +8,29 @@
   --surface-alt: #f8f9fa;
 }
 
-html[dir="rtl"] body {
-  font-family: "Cairo", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-}
+html[dir="rtl"] body { font-family: "Cairo", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
 
 /* Cards and containers */
-.card {
-  border-radius: .75rem;
-}
+.card { border-radius: .75rem; }
 
-.card-header {
-  background-color: var(--surface) !important;
-}
+.card-header { background-color: var(--surface) !important; }
 
 /* Table tweaks */
-.table thead th {
-  white-space: nowrap;
-}
+.table thead th { white-space: nowrap; }
 
-.table-responsive {
-  overflow-x: auto;
-}
+.table-responsive { overflow-x: auto; }
 
 /* Status dots */
-.status-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-inline-start: 6px;
-}
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-start: 6px; }
 .status-new { background: var(--brand-secondary); }
 .status-inprogress { background: var(--brand-warning); }
 .status-completed { background: var(--brand-success); }
 .status-overdue { background: var(--brand-danger); }
 
-/* Offcanvas sidebar width for RTL */
-.offcanvas-end { width: 260px; }
+/* Remove sidebar width to avoid stray offcanvas/sidebar */
+.offcanvas-end { width: 0; display: none !important; }
 
-/* Fix possible overflow on small screens */
+/* Layout spacing under navbar */
 main { min-height: calc(100vh - 56px); }
 
 /* Alerts spacing */
@@ -54,4 +38,11 @@ main { min-height: calc(100vh - 56px); }
 
 /* Accessibility: focus outline visible */
 :focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+
+/* Navbar spacing */
+.navbar + main { padding-top: 1rem; }
+
+/* Support logical properties for RTL/LTR automatically */
+.me-auto { margin-inline-end: auto !important; }
+.ms-auto { margin-inline-start: auto !important; }
 

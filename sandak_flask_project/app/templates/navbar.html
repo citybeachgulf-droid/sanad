@@ -1,0 +1,27 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('main.dashboard') }}">سند</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('main.dashboard') }}">لوحة التحكم</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('main.clients') }}">العملاء</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('main.transactions') }}">المعاملات</a></li>
+        {% if current_user.is_authenticated and current_user.role == 'admin' %}
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">الإدارة</a></li>
+        {% endif %}
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        {% if current_user.is_authenticated %}
+        <li class="nav-item"><span class="navbar-text">مرحباً، {{ current_user.username }}</span></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">خروج</a></li>
+        {% else %}
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">تسجيل الدخول</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
