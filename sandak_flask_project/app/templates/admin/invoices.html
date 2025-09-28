@@ -1,0 +1,104 @@
+{% extends 'admin/layout.html' %}
+{% block title %}الفواتير{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">الفواتير</h5>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createInvoice"><i class="fa fa-plus"></i> إنشاء فاتورة</button>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-6">
+    <select class="form-select" name="client_id">
+      <option value="">الكل - العميل</option>
+      {% for c in clients %}
+      <option value="{{ c.id }}" {{ 'selected' if client_id==c.id else '' }}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-4">
+    <select class="form-select" name="status">
+      <option value="">كل الحالات</option>
+      {% for s in ['unpaid','partial','paid','overdue'] %}
+      <option value="{{ s }}" {{ 'selected' if status==s else '' }}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-outline-primary w-100" type="submit">تصفية</button>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>العميل</th>
+          <th>المبلغ الإجمالي</th>
+          <th>الحالة</th>
+          <th>تاريخ الاستحقاق</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in items %}
+        <tr>
+          <td>{{ inv.id }}</td>
+          <td>{{ inv.client.name if inv.client else '-' }}</td>
+          <td>{{ '%.2f' % inv.total_amount }}</td>
+          <td>
+            <span class="badge {% if inv.status=='paid' %}bg-success{% elif inv.status=='partial' %}bg-warning text-dark{% elif inv.status=='overdue' %}bg-danger{% else %}bg-secondary{% endif %}">{{ inv.status }}</span>
+          </td>
+          <td class="text-muted small">{{ inv.due_date.strftime('%Y-%m-%d') if inv.due_date else '-' }}</td>
+          <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('main.invoice_detail', invoice_id=inv.id) }}">تفاصيل</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted">لا توجد فواتير</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create Invoice Modal -->
+<div class="modal fade" id="createInvoice" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">إنشاء فاتورة</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{{ url_for('main.invoices_create') }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">العميل</label>
+            <select class="form-select" name="client_id" required>
+              {% for c in clients %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">المبلغ الإجمالي</label>
+            <input type="number" step="0.01" min="0" class="form-control" name="total_amount" value="0.00" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">تاريخ الاستحقاق</label>
+            <input type="date" class="form-control" name="due_date">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">ملاحظات</label>
+            <textarea class="form-control" name="notes" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-primary">حفظ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

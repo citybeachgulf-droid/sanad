@@ -40,6 +40,31 @@ def create_app(config_class=Config):
                 tr_cols = {row[1] for row in res_tr} if res_tr else set()
                 if 'client_phone' not in tr_cols:
                     conn.execute(text("ALTER TABLE transactions ADD COLUMN client_phone VARCHAR(50)"))
+
+                # Transaction enhancements table and columns
+                res_tr2 = conn.execute(text("PRAGMA table_info(transaction)")).fetchall()
+                # SQLite default SQLAlchemy table name is 'transaction' for Transaction model
+                tr2_cols = {row[1] for row in res_tr2} if res_tr2 else set()
+                # Add columns if missing
+                if 'assigned_to' not in tr2_cols:
+                    conn.execute(text("ALTER TABLE transaction ADD COLUMN assigned_to INTEGER"))
+                if 'due_date' not in tr2_cols:
+                    conn.execute(text("ALTER TABLE transaction ADD COLUMN due_date DATETIME"))
+                if 'started_at' not in tr2_cols:
+                    conn.execute(text("ALTER TABLE transaction ADD COLUMN started_at DATETIME"))
+                if 'completed_at' not in tr2_cols:
+                    conn.execute(text("ALTER TABLE transaction ADD COLUMN completed_at DATETIME"))
+                if 'delay_reason' not in tr2_cols:
+                    conn.execute(text("ALTER TABLE transaction ADD COLUMN delay_reason TEXT"))
+                if 'status' not in tr2_cols:
+                    conn.execute(text("ALTER TABLE transaction ADD COLUMN status VARCHAR(50) DEFAULT 'new'"))
+
+                # Create new tables if not present (idempotent for SQLite)
+                conn.execute(text("CREATE TABLE IF NOT EXISTS client_contacts (id INTEGER PRIMARY KEY, client_id INTEGER NOT NULL, kind VARCHAR(20) NOT NULL, value VARCHAR(200) NOT NULL, is_primary BOOLEAN DEFAULT 0, created_at DATETIME)"))
+                conn.execute(text("CREATE TABLE IF NOT EXISTS client_notes (id INTEGER PRIMARY KEY, client_id INTEGER NOT NULL, content TEXT NOT NULL, created_by INTEGER, created_at DATETIME)"))
+                conn.execute(text("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title VARCHAR(200) NOT NULL, description TEXT, status VARCHAR(30) DEFAULT 'todo', priority VARCHAR(20) DEFAULT 'medium', due_date DATETIME, assignee_id INTEGER, creator_id INTEGER, transaction_id INTEGER, client_id INTEGER, created_at DATETIME, updated_at DATETIME)"))
+                conn.execute(text("CREATE TABLE IF NOT EXISTS invoices (id INTEGER PRIMARY KEY, client_id INTEGER NOT NULL, transaction_id INTEGER, total_amount NUMERIC DEFAULT 0, status VARCHAR(20) DEFAULT 'unpaid', due_date DATETIME, notes TEXT, created_at DATETIME, updated_at DATETIME)"))
+                conn.execute(text("CREATE TABLE IF NOT EXISTS invoice_payments (id INTEGER PRIMARY KEY, invoice_id INTEGER NOT NULL, amount NUMERIC NOT NULL, method VARCHAR(50), reference VARCHAR(120), paid_at DATETIME)"))
         except Exception:
             # Silently skip to avoid breaking app startup in environments without SQLite PRAGMA
             pass
@@ -47,6 +72,8 @@ def create_app(config_class=Config):
     # Run once at startup under the app context (Flask 3.x compatible)
     with app.app_context():
         ensure_schema_compatibility()
+        # Ensure all tables exist
+        db.create_all()
 
     # Blueprints
     from app.routes import main_bp

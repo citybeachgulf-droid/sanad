@@ -14,6 +14,11 @@
       @media (max-width: 991.98px) {
         .content { margin-right: 0; }
       }
+      .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px}
+      .status-new{background:#6c757d}
+      .status-inprogress{background:#ffc107}
+      .status-completed{background:#28a745}
+      .status-overdue{background:#dc3545}
     </style>
     {% block head %}{% endblock %}
   </head>
@@ -26,6 +31,8 @@
           <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/employees') %}active{% endif %}" href="{{ url_for('admin.employees_list') }}"><i class="fa-solid fa-users"></i> الموظفون</a></li>
           <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/clients') %}active{% endif %}" href="{{ url_for('admin.clients_list') }}"><i class="fa-solid fa-user-group"></i> العملاء</a></li>
           <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/transactions') %}active{% endif %}" href="{{ url_for('admin.transactions_list') }}"><i class="fa-solid fa-file-lines"></i> المعاملات</a></li>
+          <li class="nav-item"><a class="nav-link {% if request.path.startswith('/invoices') %}active{% endif %}" href="{{ url_for('main.invoices_list') }}"><i class="fa-solid fa-receipt"></i> الفواتير</a></li>
+          <li class="nav-item"><a class="nav-link {% if request.path.startswith('/reports') %}active{% endif %}" href="{{ url_for('main.custom_reports') }}"><i class="fa-solid fa-chart-line"></i> التقارير</a></li>
           <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/settings') %}active{% endif %}" href="{{ url_for('admin.settings') }}"><i class="fa-solid fa-gear"></i> الإعدادات</a></li>
         </ul>
         <hr>
@@ -47,6 +54,8 @@
               <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/employees') %}active{% endif %}" href="{{ url_for('admin.employees_list') }}"><i class="fa-solid fa-users"></i> الموظفون</a></li>
               <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/clients') %}active{% endif %}" href="{{ url_for('admin.clients_list') }}"><i class="fa-solid fa-user-group"></i> العملاء</a></li>
               <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/transactions') %}active{% endif %}" href="{{ url_for('admin.transactions_list') }}"><i class="fa-solid fa-file-lines"></i> المعاملات</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.path.startswith('/invoices') %}active{% endif %}" href="{{ url_for('main.invoices_list') }}"><i class="fa-solid fa-receipt"></i> الفواتير</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.path.startswith('/reports') %}active{% endif %}" href="{{ url_for('main.custom_reports') }}"><i class="fa-solid fa-chart-line"></i> التقارير</a></li>
               <li class="nav-item"><a class="nav-link {% if request.path.startswith('/admin/settings') %}active{% endif %}" href="{{ url_for('admin.settings') }}"><i class="fa-solid fa-gear"></i> الإعدادات</a></li>
             </ul>
             <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger w-100"><i class="fa-solid fa-right-from-bracket"></i> خروج</a>
