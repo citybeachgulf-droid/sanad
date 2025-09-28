@@ -29,6 +29,12 @@ def create_app(config_class=Config):
                 cols = {row[1] for row in res} if res else set()
                 if 'fee' not in cols:
                     conn.execute(text("ALTER TABLE managed_transactions ADD COLUMN fee NUMERIC DEFAULT 0"))
+                if 'is_paid' not in cols:
+                    conn.execute(text("ALTER TABLE managed_transactions ADD COLUMN is_paid BOOLEAN DEFAULT 0"))
+                if 'paid_amount' not in cols:
+                    conn.execute(text("ALTER TABLE managed_transactions ADD COLUMN paid_amount NUMERIC DEFAULT 0"))
+                if 'paid_at' not in cols:
+                    conn.execute(text("ALTER TABLE managed_transactions ADD COLUMN paid_at DATETIME"))
                 # Check for client_phone in transactions (TransactionRecord)
                 res_tr = conn.execute(text("PRAGMA table_info(transactions)")).fetchall()
                 tr_cols = {row[1] for row in res_tr} if res_tr else set()

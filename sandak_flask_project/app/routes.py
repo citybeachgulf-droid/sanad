@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from datetime import datetime
 from flask_login import login_required, current_user
 from app import db
 from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord, ManagedTransaction
@@ -147,6 +148,8 @@ def managed_transactions_add():
     description = request.form.get('description') or ''
     status = request.form.get('status') or 'نشطة'
     fee_raw = (request.form.get('fee') or '').strip()
+    is_paid_raw = request.form.get('is_paid')
+    paid_amount_raw = (request.form.get('paid_amount') or '').strip()
     try:
         fee_value = float(fee_raw) if fee_raw != '' else 0.0
         if fee_value < 0:
@@ -154,6 +157,17 @@ def managed_transactions_add():
     except Exception:
         flash('قيمة الرسوم غير صحيحة', 'danger')
         return redirect(url_for('main.managed_transactions_list'))
+
+    is_paid = bool(is_paid_raw)
+    paid_amount = 0.0
+    if is_paid:
+        try:
+            paid_amount = float(paid_amount_raw) if paid_amount_raw != '' else fee_value
+            if paid_amount < 0:
+                raise ValueError('negative paid amount')
+        except Exception:
+            flash('قيمة المبلغ المدفوع غير صحيحة', 'danger')
+            return redirect(url_for('main.managed_transactions_list'))
 
     if authority not in AUTHORITIES or not service or status not in STATUSES:
         flash('الرجاء تعبئة الحقول بشكل صحيح', 'danger')
@@ -165,6 +179,9 @@ def managed_transactions_add():
         description=description.strip(),
         fee=fee_value,
         status=status,
+        is_paid=is_paid,
+        paid_amount=paid_amount if is_paid else 0,
+        paid_at=datetime.utcnow() if is_paid else None,
     )
     db.session.add(row)
     db.session.commit()
@@ -182,6 +199,8 @@ def managed_transactions_edit(item_id):
     status = request.form.get('status') or row.status
     fee_raw = request.form.get('fee')
     new_fee = row.fee
+    is_paid_raw = request.form.get('is_paid')
+    paid_amount_raw = request.form.get('paid_amount')
     if fee_raw is not None:
         try:
             fee_value = float((fee_raw or '').strip() or 0)
@@ -192,6 +211,27 @@ def managed_transactions_edit(item_id):
             flash('قيمة الرسوم غير صحيحة', 'danger')
             return redirect(url_for('main.managed_transactions_list'))
 
+    # Payment handling
+    new_is_paid = row.is_paid
+    new_paid_amount = row.paid_amount
+    new_paid_at = row.paid_at
+    if is_paid_raw is not None:
+        new_is_paid = True if is_paid_raw in ('on', 'true', '1') else False
+    if paid_amount_raw is not None:
+        try:
+            value = float((paid_amount_raw or '').strip() or 0)
+            if value < 0:
+                raise ValueError('negative paid amount')
+            new_paid_amount = value
+        except Exception:
+            flash('قيمة المبلغ المدفوع غير صحيحة', 'danger')
+            return redirect(url_for('main.managed_transactions_list'))
+    # Set paid_at when moving to paid, clear when unpaying
+    if new_is_paid and not row.is_paid:
+        new_paid_at = datetime.utcnow()
+    if not new_is_paid:
+        new_paid_at = None
+
     if authority not in AUTHORITIES or not service or status not in STATUSES:
         flash('بيانات غير صحيحة', 'danger')
         return redirect(url_for('main.managed_transactions_list'))
@@ -201,6 +241,9 @@ def managed_transactions_edit(item_id):
     row.description = (description or '').strip()
     row.status = status
     row.fee = new_fee
+    row.is_paid = new_is_paid
+    row.paid_amount = new_paid_amount if new_is_paid else 0
+    row.paid_at = new_paid_at
     db.session.commit()
     flash('تم تحديث المعاملة', 'success')
     return redirect(url_for('main.managed_transactions_list'))
