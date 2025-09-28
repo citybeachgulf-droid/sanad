@@ -31,7 +31,23 @@
           <div class="h4 mb-0">{{ card.value }}</div>
         </div>
       </div>
+      {% if card.title == 'عدد المعاملات' %}
+      <div class="card-footer bg-white border-0 pt-0 px-3 pb-3">
+        <div class="d-flex gap-3 flex-wrap small">
+          <a href="{{ url_for('main.dashboard', status='completed') }}" class="text-success text-decoration-none">
+            منتهية
+          </a>
+          <a href="{{ url_for('main.dashboard', status='overdue') }}" class="text-danger text-decoration-none">
+            متأخرة
+          </a>
+          <a href="{{ url_for('main.dashboard', status='in_progress') }}" class="text-warning text-decoration-none">
+            قيد الإجراء
+          </a>
+        </div>
+      </div>
+      {% else %}
       <a href="{{ card.url }}" class="stretched-link"></a>
+      {% endif %}
     </div>
   </div>
   {% endfor %}
