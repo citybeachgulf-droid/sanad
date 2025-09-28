@@ -292,6 +292,33 @@ def api_services_by_ministry():
     return jsonify([{'id': s.id, 'name': s.name} for s in items])
 
 
+# ----------------------- New Transactions Page (status == 'new') -----------------------
+
+@main_bp.route('/transactions/new-items')
+@login_required
+def transactions_new():
+    now = datetime.utcnow()
+    employee_id = request.args.get('employee_id', type=int)
+    service_type = (request.args.get('service_type') or '').strip()
+
+    q = Transaction.query.filter(Transaction.status == 'new')
+    if employee_id:
+        q = q.filter(Transaction.assigned_to == employee_id)
+    if service_type:
+        q = q.filter(Transaction.service_type.ilike(f"%{service_type}%"))
+
+    items = q.order_by(Transaction.created_at.desc()).all()
+    employees = User.query.order_by(User.username.asc()).all()
+    return render_template(
+        'transactions_new.html',
+        items=items,
+        employees=employees,
+        employee_id=employee_id,
+        service_type=service_type,
+        now=now,
+    )
+
+
 # ----------------------- Managed Transactions (Authority/Service catalog) -----------------------
 
 AUTHORITIES = [

@@ -1,0 +1,90 @@
+{% extends 'layout.html' %}
+{% block title %}المعاملات الجديدة{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">الرئيسية</a></li>
+    <li class="breadcrumb-item active" aria-current="page">المعاملات الجديدة</li>
+  </ol>
+  </nav>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">المعاملات الجديدة</h5>
+  <a class="btn btn-primary" href="{{ url_for('main.new_transaction') }}"><i class="fa fa-plus"></i> إضافة معاملة</a>
+</div>
+
+<form class="row g-2 align-items-end mb-3" method="get">
+  <div class="col-md-4">
+    <label class="form-label small">الموظف المسؤول</label>
+    <select class="form-select" name="employee_id">
+      <option value="">الكل</option>
+      {% for emp in employees %}
+      <option value="{{ emp.id }}" {{ 'selected' if employee_id==emp.id else '' }}>{{ emp.username }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label small">نوع المعاملة</label>
+    <input class="form-control" name="service_type" value="{{ service_type or '' }}" placeholder="بحث عن نوع الخدمة">
+  </div>
+  <div class="col-md-4">
+    <button class="btn btn-outline-primary w-100" type="submit">تصفية</button>
+  </div>
+</form>
+
+<div class="card shadow-sm rounded-3">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table align-middle table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>العميل</th>
+            <th>نوع المعاملة</th>
+            <th>الحالة</th>
+            <th>المسؤول</th>
+            <th>تاريخ الإنشاء</th>
+            <th>الموعد النهائي</th>
+            <th style="width:220px">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in items %}
+          <tr>
+            <td>{{ t.client.name if t.client else '-' }}</td>
+            <td>{{ t.service_type }}</td>
+            <td>
+              <span class="badge bg-secondary">جديدة</span>
+            </td>
+            <td>{{ t.assigned_user.username if t.assigned_user else '-' }}</td>
+            <td class="text-muted small">{{ t.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td class="text-muted small">{{ t.due_date.strftime('%Y-%m-%d %H:%M') if t.due_date else '-' }}</td>
+            <td>
+              <form class="d-inline" method="post" action="{{ url_for('main.update_transaction_status', transaction_id=t.id) }}">
+                <div class="d-flex gap-2 flex-wrap">
+                  <select class="form-select form-select-sm" name="status" style="width: 140px;">
+                    <option value="new" selected>جديدة</option>
+                    <option value="in_progress">تحت الإجراء</option>
+                    <option value="completed">منتهية</option>
+                  </select>
+                  <select class="form-select form-select-sm" name="assigned_to" style="width: 140px;">
+                    <option value="">بدون تعيين</option>
+                    {% for emp in employees %}
+                    <option value="{{ emp.id }}" {{ 'selected' if t.assigned_to==emp.id else '' }}>{{ emp.username }}</option>
+                    {% endfor %}
+                  </select>
+                  <input type="datetime-local" class="form-control form-control-sm" name="due_date" value="{{ t.due_date.strftime('%Y-%m-%dT%H:%M') if t.due_date else '' }}" style="width: 200px;">
+                  <button class="btn btn-sm btn-primary" type="submit">تحديث</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted">لا توجد معاملات جديدة</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
