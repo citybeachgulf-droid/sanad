@@ -1,0 +1,38 @@
+{% extends 'admin/layout.html' %}
+{% block title %}تقرير الجهات والخدمات{% endblock %}
+{% block content %}
+<h2 class="mb-3">تقرير الجهات والخدمات</h2>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">الإجمالي حسب النوع</div>
+      <ul class="list-group list-group-flush">
+        {% for k, c in by_kind %}
+        <li class="list-group-item d-flex justify-content-between"><span>{{ k }}</span><span class="badge bg-primary">{{ c }}</span></li>
+        {% else %}
+        <li class="list-group-item text-muted">لا بيانات</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">عدد الخدمات لكل جهة</div>
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>الجهة</th><th>عدد الخدمات</th></tr></thead>
+          <tbody>
+            {% for name, cnt in per_org %}
+            <tr><td>{{ name }}</td><td>{{ cnt }}</td></tr>
+            {% else %}
+            <tr><td colspan="2" class="text-center text-muted">لا توجد بيانات</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

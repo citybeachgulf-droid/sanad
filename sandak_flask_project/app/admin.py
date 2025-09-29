@@ -164,6 +164,27 @@ def catalog_list():
     return render_template('admin/catalog.html', orgs=orgs, kinds=kinds, q=q, kind=kind)
 
 
+@admin_bp.route('/catalog/report')
+@admin_required
+def catalog_report():
+    from sqlalchemy import func
+    # counts by kind
+    by_kind = (
+        db.session.query(Organization.kind, func.count(Organization.id))
+        .group_by(Organization.kind)
+        .all()
+    )
+    # counts services per org
+    per_org = (
+        db.session.query(Organization.name, func.count(OrgService.id))
+        .outerjoin(OrgService, OrgService.organization_id == Organization.id)
+        .group_by(Organization.name)
+        .order_by(Organization.name)
+        .all()
+    )
+    return render_template('admin/catalog_report.html', by_kind=by_kind, per_org=per_org)
+
+
 @admin_bp.route('/catalog/org/create', methods=['POST'])
 @admin_required
 def catalog_org_create():

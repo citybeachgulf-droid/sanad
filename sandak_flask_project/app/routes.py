@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from datetime import datetime, timedelta
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord, ManagedTransaction, ClientContact, ClientNote, Task, Invoice, InvoicePayment, Income
+from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord, ManagedTransaction, ClientContact, ClientNote, Task, Invoice, InvoicePayment, Income, Organization, OrgService
 from app.forms import ClientForm
 
 main_bp = Blueprint('main', __name__)
@@ -287,6 +287,39 @@ def api_services_by_ministry():
         return jsonify([])
     items = Service.query.filter_by(ministry_id=ministry_id).order_by(Service.name).all()
     return jsonify([{'id': s.id, 'name': s.name} for s in items])
+
+
+# Catalog APIs
+@main_bp.route('/api/organizations')
+@login_required
+def api_organizations():
+    kind = request.args.get('kind')
+    q = (request.args.get('q') or '').strip()
+    query = Organization.query
+    if kind:
+        query = query.filter(Organization.kind == kind)
+    if q:
+        query = query.filter(Organization.name.ilike(f"%{q}%"))
+    orgs = query.order_by(Organization.name.asc()).all()
+    return jsonify([
+        {'id': o.id, 'name': o.name, 'kind': o.kind} for o in orgs
+    ])
+
+
+@main_bp.route('/api/organizations/<int:org_id>/services')
+@login_required
+def api_org_services(org_id):
+    only_active = request.args.get('only_active') in ('1', 'true', 'on')
+    q = (request.args.get('q') or '').strip()
+    query = OrgService.query.filter_by(organization_id=org_id)
+    if only_active:
+        query = query.filter(OrgService.is_active == True)
+    if q:
+        query = query.filter(OrgService.name.ilike(f"%{q}%"))
+    items = query.order_by(OrgService.name.asc()).all()
+    return jsonify([
+        {'id': s.id, 'name': s.name, 'description': s.description, 'is_active': bool(s.is_active)} for s in items
+    ])
 
 
 # ----------------------- New Transactions Page (status == 'new') -----------------------
