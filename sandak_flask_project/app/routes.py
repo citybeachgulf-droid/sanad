@@ -210,7 +210,7 @@ def new_transaction():
         db.session.add(t)
         db.session.commit()
         flash('Transaction created.')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.transactions_new'))
     return render_template('transaction_form.html', form=form)
 
 
@@ -273,9 +273,25 @@ def add_gov_transaction():
             employee_id=current_user.id,
         )
         db.session.add(rec)
+        # Also create a standard Transaction entry so it appears in the "new" list
+        try:
+            m = Ministry.query.get(int(ministry_id)) if ministry_id else None
+            s_obj = Service.query.get(int(service_id)) if service_id else None
+        except Exception:
+            m = None
+            s_obj = None
+
+        std_tx = Transaction(
+            client_id=client_row.id if client_row and client_row.id else None,
+            service_type=(s_obj.name if s_obj else None),
+            office=(m.name if m else None),
+            fee=0,
+            details=notes,
+        )
+        db.session.add(std_tx)
         db.session.commit()
         flash('تم حفظ المعاملة بنجاح', 'success')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.transactions_new'))
 
     ministries = Ministry.query.order_by(Ministry.name).all()
     return render_template('add_transaction.html', ministries=ministries)
