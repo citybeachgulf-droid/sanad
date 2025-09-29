@@ -215,3 +215,35 @@ class Income(db.Model):
     def unique_key(self):
         return f"{self.source}:{self.source_id}"
 
+
+# ---------------- Organizations & Services (Generic Catalog) ----------------
+
+class Organization(db.Model):
+    __tablename__ = 'organizations'
+    id = db.Column(db.Integer, primary_key=True)
+    # Organization display name (e.g., وزارة التجارة، الشرطة، البنوك، شركات التأمين ...)
+    name = db.Column(db.String(200), nullable=False, unique=True, index=True)
+    # kind in Arabic to match business language: حكومي | خاص | شريك
+    kind = db.Column(db.String(20), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    services = db.relationship(
+        'OrgService', backref='organization', lazy=True, cascade='all, delete-orphan'
+    )
+
+
+class OrgService(db.Model):
+    __tablename__ = 'org_services'
+    id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('organization_id', 'name', name='uq_org_service_name_per_org'),
+        db.Index('ix_org_services_name', 'name'),
+    )
