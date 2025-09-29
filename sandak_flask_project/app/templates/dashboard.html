@@ -20,7 +20,7 @@
     {'title':'المعاملات المتأخرة','value':overdue_count,'icon':'fa-triangle-exclamation','color':'danger','url': url_for('main.dashboard', status='overdue')}
   ] %}
   {% for card in stats_cards %}
-  <div class="col-md-3">
+  <div class="col-6 col-md-3">
     <div class="card shadow-sm border-0 border-start border-5 border-{{ card.color }} rounded-3 hover-scale position-relative">
       <div class="card-body d-flex align-items-center">
         <div class="flex-shrink-0 me-3 text-{{ card.color }}">
@@ -57,7 +57,7 @@
 {% if current_user.is_authenticated and current_user.role == 'admin' %}
 <!-- بطاقات إضافية للمدير -->
 <div class="row g-3 mb-4">
-  <div class="col-md-3">
+  <div class="col-6 col-md-3">
     <div class="card shadow-sm border-0 border-start border-5 border-info rounded-3 hover-scale">
       <div class="card-body d-flex align-items-center">
         <div class="flex-shrink-0 me-3 text-info"><i class="fa-solid fa-users" style="font-size:32px;"></i></div>
@@ -68,7 +68,7 @@
       </div>
     </div>
   </div>
-  <div class="col-md-3">
+  <div class="col-6 col-md-3">
     <div class="card shadow-sm border-0 border-start border-5 border-success rounded-3 hover-scale">
       <div class="card-body d-flex align-items-center">
         <div class="flex-shrink-0 me-3 text-success"><i class="fa-solid fa-sack-dollar" style="font-size:32px;"></i></div>
@@ -97,9 +97,13 @@
 
 <!-- نظرة عامة وجدول المعاملات -->
 <div class="card shadow-sm rounded-3">
-  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
     <h6 class="mb-0">نظرة عامة</h6>
-    <div>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse" aria-expanded="false" aria-controls="filtersCollapse">
+        <i class="fa-solid fa-filter ms-1"></i>
+        تصفية
+      </button>
       <a href="{{ url_for('main.clients') }}" class="btn btn-sm btn-primary">إدارة العملاء</a>
       {% if current_user.is_authenticated and current_user.role == 'admin' %}
       <a href="{{ url_for('admin.employees_create') }}" class="btn btn-sm btn-outline-primary ms-2"><i class="fa fa-user-plus"></i> إضافة موظف</a>
@@ -108,7 +112,8 @@
   </div>
   <div class="card-body">
     <!-- نموذج التصفية -->
-    <form class="row g-2 align-items-end mb-3" method="get">
+    <div class="collapse mb-3" id="filtersCollapse">
+      <form class="row g-2 align-items-end" method="get">
       <div class="col-md-3">
         <label class="form-label small">الحالة</label>
         <select class="form-select" name="status">
@@ -135,19 +140,20 @@
       <div class="col-md-3">
         <button class="btn btn-outline-primary w-100" type="submit">تصفية</button>
       </div>
-    </form>
+      </form>
+    </div>
 
     <!-- جدول المعاملات -->
     <div class="table-responsive">
-      <table class="table align-middle table-hover mb-0">
+      <table class="table align-middle table-hover mb-0" data-enhance="table">
         <thead class="table-light">
           <tr>
             <th>العميل</th>
             <th>نوع المعاملة</th>
             <th>الحالة</th>
-            <th>المسؤول</th>
-            <th>تاريخ الإنشاء</th>
-            <th>الموعد النهائي</th>
+            <th class="d-none d-md-table-cell">المسؤول</th>
+            <th class="d-none d-lg-table-cell">تاريخ الإنشاء</th>
+            <th class="d-none d-lg-table-cell">الموعد النهائي</th>
             <th style="width:220px">إجراءات</th>
           </tr>
         </thead>
@@ -163,9 +169,9 @@
                 {% endif %}
               </span>
             </td>
-            <td>{{ t.assigned_user.username if t.assigned_user else '-' }}</td>
-            <td class="text-muted small">{{ t.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-            <td class="text-muted small">{{ t.due_date.strftime('%Y-%m-%d %H:%M') if t.due_date else '-' }}</td>
+            <td class="d-none d-md-table-cell">{{ t.assigned_user.username if t.assigned_user else '-' }}</td>
+            <td class="text-muted small d-none d-lg-table-cell">{{ t.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td class="text-muted small d-none d-lg-table-cell">{{ t.due_date.strftime('%Y-%m-%d %H:%M') if t.due_date else '-' }}</td>
             <td>
               <!-- تحديث المعاملة -->
               <form class="d-inline" method="post" action="{{ url_for('main.update_transaction_status', transaction_id=t.id) }}">
@@ -228,8 +234,5 @@
   }catch(e){}
 })();
 </script>
-<style>
-.hover-scale:hover { transform: scale(1.03); transition: all 0.3s ease; }
-</style>
 {% endif %}
 {% endblock %}

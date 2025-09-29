@@ -27,8 +27,12 @@ html[dir="rtl"] body { font-family: "Cairo", system-ui, -apple-system, "Segoe UI
 .status-completed { background: var(--brand-success); }
 .status-overdue { background: var(--brand-danger); }
 
-/* Remove sidebar width to avoid stray offcanvas/sidebar */
-.offcanvas-end { width: 0; display: none !important; }
+/* Offcanvas: enable mobile sidebar */
+.offcanvas { width: 280px; }
+
+/* Subtle hover interaction for cards */
+.hover-scale { transition: transform .2s ease, box-shadow .2s ease; }
+.hover-scale:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.08); }
 
 /* Layout spacing under navbar */
 main { min-height: calc(100vh - 56px); }

@@ -20,5 +20,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // swallow errors to avoid breaking pages
     console && console.warn && console.warn('datatable init error', e);
   }
+
+  // Auto-open filters on large screens, keep collapsed on mobile for a cleaner UI
+  try {
+    var filters = document.getElementById('filtersCollapse');
+    if (filters) {
+      if (window.matchMedia('(min-width: 992px)').matches) {
+        new bootstrap.Collapse(filters, { toggle: false }).show();
+      }
+    }
+  } catch (e) {}
 });
 
