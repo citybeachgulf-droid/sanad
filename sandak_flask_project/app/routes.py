@@ -253,26 +253,30 @@ def add_gov_transaction():
             notes=notes,
             employee_id=current_user.id,
         )
-        db.session.add(rec)
-        # Also create a standard Transaction entry so it appears in the "new" list
-        try:
-            m = Ministry.query.get(int(ministry_id)) if ministry_id else None
-            s_obj = Service.query.get(int(service_id)) if service_id else None
-        except Exception:
-            m = None
-            s_obj = None
-
-        std_tx = Transaction(
-            client_id=client_row.id if client_row and client_row.id else None,
-            service_type=(s_obj.name if s_obj else None),
-            office=(m.name if m else None),
-            fee=0,
-            details=notes,
+        # Prevent duplicate submissions within a short window
+        from datetime import timedelta as _td
+        cutoff = datetime.utcnow() - _td(minutes=2)
+        existing = (
+            TransactionRecord.query
+            .filter(TransactionRecord.client_name == client_name)
+            .filter(TransactionRecord.ministry_id == int(ministry_id))
+            .filter(TransactionRecord.service_id == int(service_id))
+            .filter(TransactionRecord.employee_id == current_user.id)
+            .filter(TransactionRecord.created_at >= cutoff)
+            .first()
         )
-        db.session.add(std_tx)
+        if existing:
+            flash('هذه المعاملة مسجلة بالفعل قبل قليل', 'warning')
+            if current_user.role == 'admin':
+                return redirect(url_for('admin.transactions_list'))
+            return redirect(url_for('main.dashboard'))
+
+        db.session.add(rec)
         db.session.commit()
         flash('تم حفظ المعاملة بنجاح', 'success')
-        return redirect(url_for('main.transactions_new'))
+        if current_user.role == 'admin':
+            return redirect(url_for('admin.transactions_list'))
+        return redirect(url_for('main.dashboard'))
 
     ministries = Ministry.query.order_by(Ministry.name).all()
     return render_template('add_transaction.html', ministries=ministries)
