@@ -6,7 +6,7 @@
       <h5 class="mb-0">إضافة معاملة جديدة</h5>
     </div>
     <div class="card-body">
-      <form method="post" action="{{ url_for('main.add_gov_transaction') }}">
+      <form method="post" action="{{ url_for('main.add_gov_transaction') }}" onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').innerText='جاري الحفظ...';">
         <div class="mb-3">
           <label for="client_name" class="form-label">اسم العميل</label>
           <input type="text" class="form-control" id="client_name" name="client_name" required>
