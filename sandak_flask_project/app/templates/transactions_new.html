@@ -1,15 +1,15 @@
 {% extends 'layout.html' %}
-{% block title %}المعاملات الجديدة{% endblock %}
+{% block title %}المعاملات التي تم إنشاؤها من إضافة معاملة جديدة{% endblock %}
 {% block content %}
 <nav aria-label="breadcrumb" class="mb-3">
   <ol class="breadcrumb mb-0">
     <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">الرئيسية</a></li>
-    <li class="breadcrumb-item active" aria-current="page">المعاملات الجديدة</li>
+    <li class="breadcrumb-item active" aria-current="page">المعاملات التي تم إنشاؤها من إضافة معاملة جديدة</li>
   </ol>
   </nav>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h5 class="mb-0">المعاملات الجديدة</h5>
+  <h5 class="mb-0">المعاملات التي تم إنشاؤها من إضافة معاملة جديدة</h5>
   <a class="btn btn-primary" href="{{ url_for('main.new_transaction') }}"><i class="fa fa-plus"></i> إضافة معاملة</a>
 </div>
 
@@ -79,7 +79,7 @@
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="7" class="text-center text-muted">لا توجد معاملات جديدة</td></tr>
+          <tr><td colspan="7" class="text-center text-muted">لا توجد معاملات تم إنشاؤها من إضافة معاملة جديدة</td></tr>
           {% endfor %}
         </tbody>
       </table>
