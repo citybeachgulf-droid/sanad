@@ -22,7 +22,7 @@
         <li class="nav-item"><a class="nav-link" href="{{ url_for('main.clients') }}">العملاء</a></li>
         {% if current_user.is_authenticated and current_user.role == 'admin' %}
         <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.catalog_list') }}">الجهات والخدمات</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.custom_reports') }}">التقارير</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('main.custom_reports') }}">التقارير</a></li>
         {% endif %}
       </ul>
 
@@ -35,7 +35,8 @@
           </a>
         </li>
         <li class="nav-item me-2">
-          <a class="nav-link" href="{{ url_for('admin.custom_reports') }}" title="الإشعارات والتقارير">
+          <a class="nav-link" href="{{ url_for('main.custom_reports') }}" title="الإشعارات والتقارير">
+
             <i class="fa-regular fa-bell"></i>
           </a>
         </li>
