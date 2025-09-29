@@ -15,7 +15,7 @@
 <div class="row g-3 mb-4">
   {% set stats_cards = [
     {'title':'عدد العملاء','value':total_clients,'icon':'fa-users','color':'primary','url': url_for('main.clients')},
-    {'title':'عدد المعاملات','value':total_transactions,'icon':'fa-file-lines','color':'success','url': url_for('main.managed_transactions_list')},
+    {'title':'عدد المعاملات','value':total_transactions,'icon':'fa-file-lines','color':'success','url': url_for('main.transactions_new')},
     {'title':'قيد الإجراء','value':in_progress_count,'icon':'fa-hourglass-half','color':'warning','url': url_for('main.dashboard', status='in_progress')},
     {'title':'المعاملات المتأخرة','value':overdue_count,'icon':'fa-triangle-exclamation','color':'danger','url': url_for('main.dashboard', status='overdue')}
   ] %}
@@ -45,6 +45,7 @@
           </a>
         </div>
       </div>
+      <a href="{{ url_for('main.transactions_new') }}" class="stretched-link" aria-label="فتح صفحة المعاملات التي تم إنشاؤها"></a>
       {% else %}
       <a href="{{ card.url }}" class="stretched-link"></a>
       {% endif %}
