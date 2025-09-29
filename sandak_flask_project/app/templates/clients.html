@@ -19,7 +19,14 @@
       </div>
 
       <div class="card shadow-sm">
-        <div class="table-responsive p-2">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <span class="small text-muted">عدد النتائج: {{ clients|length }}</span>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary js-export-print">طباعة</button>
+            <button type="button" class="btn btn-sm btn-outline-primary js-export-csv" data-filename="clients.csv">تصدير CSV</button>
+          </div>
+        </div>
+        <div class="table-responsive p-2 table-sticky">
           <table class="table align-middle mb-0" data-enhance="table">
             <thead class="table-light">
               <tr>

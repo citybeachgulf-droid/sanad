@@ -1,25 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{% block title %}My App{% endblock %}</title>
-</head>
-<body>
-    <header>
-        <!-- الهيدر هنا -->
-    </header>
-
-    <nav class="mb-3">
-        <a href="{{ url_for('admin.employees_list') }}">الموظفون</a> |
-        <a href="{{ url_for('admin.clients_list') }}">العملاء</a> |
-        <a href="{{ url_for('admin.catalog_list') }}">الجهات والخدمات</a> |
-        <a href="{{ url_for('admin.catalog_report') }}">تقرير الجهات</a>
-    </nav>
-
-    {% block content %}{% endblock %} <!-- يجب أن يكون هذا مرة واحدة فقط -->
-
-    <footer>
-        <!-- الفوتر هنا -->
-    </footer>
-</body>
-</html>
+{% extends 'layout.html' %}
+{% block title %}{% endblock %}
+{% block content %}
+  {% block content %}{% endblock %}
+{% endblock %}

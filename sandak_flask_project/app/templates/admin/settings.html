@@ -46,6 +46,98 @@
       </div>
     </div>
   </div>
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">تخصيص المظهر</h6>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="resetTheme">إعادة الضبط</button>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label small">اللون الأساسي</label>
+            <input type="color" class="form-control form-control-color" id="colorPrimary" value="#0d6efd" title="اختر اللون">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">اللون الثانوي</label>
+            <input type="color" class="form-control form-control-color" id="colorSecondary" value="#6c757d">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">لون النجاح</label>
+            <input type="color" class="form-control form-control-color" id="colorSuccess" value="#198754">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">تحميل الشعار (رابط)</label>
+            <input type="url" class="form-control" id="logoUrl" placeholder="https://.../logo.png">
+          </div>
+          <div class="col-12 text-end">
+            <button class="btn btn-primary" id="saveTheme">حفظ المظهر</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function(){
+    const root = document.documentElement;
+    const primary = document.getElementById('colorPrimary');
+    const secondary = document.getElementById('colorSecondary');
+    const success = document.getElementById('colorSuccess');
+    const logo = document.getElementById('logoUrl');
+    const saveBtn = document.getElementById('saveTheme');
+    const resetBtn = document.getElementById('resetTheme');
+
+    try {
+      const saved = localStorage.getItem('app_theme');
+      if (saved) {
+        const cfg = JSON.parse(saved);
+        primary.value = (cfg['--brand-primary'] || '#0d6efd');
+        secondary.value = (cfg['--brand-secondary'] || '#6c757d');
+        success.value = (cfg['--brand-success'] || '#198754');
+      }
+      const savedLogo = localStorage.getItem('app_logo_url');
+      if (savedLogo) logo.value = savedLogo;
+    } catch (e) {}
+
+    saveBtn && saveBtn.addEventListener('click', function(){
+      const cfg = {
+        '--brand-primary': primary.value,
+        '--brand-secondary': secondary.value,
+        '--brand-success': success.value
+      };
+      try {
+        Object.keys(cfg).forEach(k => root.style.setProperty(k, cfg[k]));
+        localStorage.setItem('app_theme', JSON.stringify(cfg));
+        if (logo.value && /^https?:\/\//.test(logo.value)) {
+          localStorage.setItem('app_logo_url', logo.value);
+        }
+        // Notify via toast
+        const container = document.getElementById('toastContainer');
+        if (container) {
+          const el = document.createElement('div');
+          el.className = 'toast align-items-center text-bg-success border-0';
+          el.setAttribute('role', 'status');
+          el.setAttribute('aria-live', 'polite');
+          el.setAttribute('aria-atomic', 'true');
+          el.innerHTML = '<div class="d-flex"><div class="toast-body">تم حفظ المظهر</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>';
+          container.appendChild(el);
+          new bootstrap.Toast(el).show();
+        }
+      } catch (e) {}
+    });
+
+    resetBtn && resetBtn.addEventListener('click', function(){
+      try {
+        localStorage.removeItem('app_theme');
+        localStorage.removeItem('app_logo_url');
+        location.reload();
+      } catch (e) {}
+    });
+  })();
+</script>
 {% endblock %}
 

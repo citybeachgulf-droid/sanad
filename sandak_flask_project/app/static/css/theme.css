@@ -4,6 +4,10 @@
   --brand-success: #198754;
   --brand-warning: #ffc107;
   --brand-danger: #dc3545;
+  --brand-info: #0dcaf0;
+  --neutral-100: #f8f9fa;
+  --neutral-200: #e9ecef;
+  --neutral-300: #dee2e6;
   --surface: #ffffff;
   --surface-alt: #f8f9fa;
 }
@@ -19,6 +23,9 @@ html[dir="rtl"] body { font-family: "Cairo", system-ui, -apple-system, "Segoe UI
 .table thead th { white-space: nowrap; }
 
 .table-responsive { overflow-x: auto; }
+
+/* Sticky table headers when wrapped in .table-sticky */
+.table-sticky thead th { position: sticky; top: 0; z-index: 2; background: var(--surface-alt); }
 
 /* Status dots */
 .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-start: 6px; }
@@ -58,4 +65,10 @@ main { min-height: calc(100vh - 56px); }
 
 /* Ensure card fills sidebar width nicely */
 aside .card { border-radius: .75rem; }
+
+/* Toasts elevation */
+.toast { box-shadow: 0 .5rem 1rem rgba(0,0,0,.15); }
+
+/* Brand logo defaults */
+#brandLogo { background: transparent; }
 
