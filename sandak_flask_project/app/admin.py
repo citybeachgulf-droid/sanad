@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord, Task, Invoice, InvoicePayment
+from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord, Task, Invoice, InvoicePayment, Organization, OrgService
 from functools import wraps
 
 
@@ -14,6 +14,7 @@ PERMISSION_OPTIONS = [
     ('transactions', 'إدارة المعاملات'),
     ('payments', 'إدارة المدفوعات'),
     ('reports', 'عرض التقارير'),
+    ('catalog', 'إدارة الجهات والخدمات'),
 ]
 
 
@@ -144,6 +145,121 @@ def api_transactions_by_ministry():
     labels = [r[0] for r in rows]
     counts = [int(r[1]) for r in rows]
     return jsonify({'labels': labels, 'counts': counts})
+
+
+# ---------------- Catalog: Organizations & Services ----------------
+
+@admin_bp.route('/catalog')
+@admin_required
+def catalog_list():
+    q = (request.args.get('q') or '').strip()
+    kind = (request.args.get('kind') or '').strip()
+    query = Organization.query
+    if q:
+        query = query.filter(Organization.name.ilike(f"%{q}%"))
+    if kind:
+        query = query.filter(Organization.kind == kind)
+    orgs = query.order_by(Organization.name.asc()).all()
+    kinds = ['حكومي', 'خاص', 'شريك']
+    return render_template('admin/catalog.html', orgs=orgs, kinds=kinds, q=q, kind=kind)
+
+
+@admin_bp.route('/catalog/org/create', methods=['POST'])
+@admin_required
+def catalog_org_create():
+    name = (request.form.get('name') or '').strip()
+    kind = (request.form.get('kind') or '').strip()
+    if not name or kind not in ('حكومي', 'خاص', 'شريك'):
+        flash('البيانات غير صحيحة', 'danger')
+        return redirect(url_for('admin.catalog_list'))
+    if Organization.query.filter_by(name=name).first():
+        flash('الجهة موجودة مسبقاً', 'warning')
+        return redirect(url_for('admin.catalog_list'))
+    db.session.add(Organization(name=name, kind=kind))
+    db.session.commit()
+    flash('تمت إضافة الجهة', 'success')
+    return redirect(url_for('admin.catalog_list'))
+
+
+@admin_bp.route('/catalog/org/<int:org_id>/edit', methods=['POST'])
+@admin_required
+def catalog_org_edit(org_id):
+    org = Organization.query.get_or_404(org_id)
+    name = (request.form.get('name') or org.name).strip()
+    kind = (request.form.get('kind') or org.kind).strip()
+    if kind not in ('حكومي', 'خاص', 'شريك'):
+        flash('نوع الجهة غير صالح', 'danger')
+        return redirect(url_for('admin.catalog_list'))
+    # prevent duplicate names
+    exists = Organization.query.filter(Organization.name == name, Organization.id != org.id).first()
+    if exists:
+        flash('اسم الجهة مستخدم', 'danger')
+        return redirect(url_for('admin.catalog_list'))
+    org.name = name
+    org.kind = kind
+    db.session.commit()
+    flash('تم تحديث الجهة', 'success')
+    return redirect(url_for('admin.catalog_list'))
+
+
+@admin_bp.route('/catalog/org/<int:org_id>/delete', methods=['POST'])
+@admin_required
+def catalog_org_delete(org_id):
+    org = Organization.query.get_or_404(org_id)
+    db.session.delete(org)
+    db.session.commit()
+    flash('تم حذف الجهة وجميع خدماتها', 'success')
+    return redirect(url_for('admin.catalog_list'))
+
+
+@admin_bp.route('/catalog/org/<int:org_id>/services/create', methods=['POST'])
+@admin_required
+def catalog_service_create(org_id):
+    org = Organization.query.get_or_404(org_id)
+    name = (request.form.get('name') or '').strip()
+    description = (request.form.get('description') or '').strip()
+    if not name:
+        flash('اسم الخدمة مطلوب', 'warning')
+        return redirect(url_for('admin.catalog_list'))
+    exists = OrgService.query.filter_by(organization_id=org.id, name=name).first()
+    if exists:
+        flash('الخدمة موجودة مسبقاً لهذه الجهة', 'warning')
+        return redirect(url_for('admin.catalog_list'))
+    db.session.add(OrgService(organization_id=org.id, name=name, description=description))
+    db.session.commit()
+    flash('تمت إضافة الخدمة', 'success')
+    return redirect(url_for('admin.catalog_list'))
+
+
+@admin_bp.route('/catalog/services/<int:svc_id>/edit', methods=['POST'])
+@admin_required
+def catalog_service_edit(svc_id):
+    svc = OrgService.query.get_or_404(svc_id)
+    name = (request.form.get('name') or svc.name).strip()
+    description = (request.form.get('description') or svc.description or '').strip()
+    is_active_raw = request.form.get('is_active')
+    is_active = True if is_active_raw in ('on', 'true', '1') else False
+    # prevent duplicate per org
+    dup = OrgService.query.filter(OrgService.organization_id == svc.organization_id, OrgService.name == name, OrgService.id != svc.id).first()
+    if dup:
+        flash('اسم الخدمة مستخدم في نفس الجهة', 'danger')
+        return redirect(url_for('admin.catalog_list'))
+    svc.name = name
+    svc.description = description
+    svc.is_active = is_active
+    db.session.commit()
+    flash('تم تحديث الخدمة', 'success')
+    return redirect(url_for('admin.catalog_list'))
+
+
+@admin_bp.route('/catalog/services/<int:svc_id>/delete', methods=['POST'])
+@admin_required
+def catalog_service_delete(svc_id):
+    svc = OrgService.query.get_or_404(svc_id)
+    db.session.delete(svc)
+    db.session.commit()
+    flash('تم حذف الخدمة', 'success')
+    return redirect(url_for('admin.catalog_list'))
 
 
 # Employees management

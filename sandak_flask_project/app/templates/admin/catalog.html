@@ -1,0 +1,100 @@
+{% extends 'admin/layout.html' %}
+{% block title %}الجهات والخدمات{% endblock %}
+{% block content %}
+
+<h2 class="mb-3">الجهات والخدمات</h2>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-4">
+    <input class="form-control" name="q" placeholder="بحث عن جهة" value="{{ q }}">
+  </div>
+  <div class="col-md-3">
+    <select class="form-select" name="kind">
+      <option value="">كل الأنواع</option>
+      {% for k in kinds %}
+      <option value="{{ k }}" {% if kind == k %}selected{% endif %}>{{ k }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-outline-primary w-100" type="submit">تصفية</button>
+  </div>
+  <div class="col-md-3 text-end">
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#addOrg">+ إضافة جهة</button>
+  </div>
+</form>
+
+<div id="addOrg" class="collapse mb-3">
+  <div class="card card-body">
+    <form method="post" action="{{ url_for('admin.catalog_org_create') }}" class="row g-2">
+      <div class="col-md-6"><input class="form-control" name="name" placeholder="اسم الجهة" required></div>
+      <div class="col-md-3">
+        <select class="form-select" name="kind" required>
+          <option value="حكومي">حكومي</option>
+          <option value="خاص">خاص</option>
+          <option value="شريك">شريك</option>
+        </select>
+      </div>
+      <div class="col-md-3"><button class="btn btn-success w-100" type="submit">حفظ</button></div>
+    </form>
+  </div>
+ </div>
+
+{% for org in orgs %}
+<div class="card mb-3">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <div>
+      <strong>{{ org.name }}</strong>
+      <span class="badge bg-secondary">{{ org.kind }}</span>
+    </div>
+    <div>
+      <form method="post" action="{{ url_for('admin.catalog_org_edit', org_id=org.id) }}" class="d-inline-flex gap-2">
+        <input class="form-control" name="name" value="{{ org.name }}" style="max-width: 260px;">
+        <select class="form-select" name="kind">
+          <option value="حكومي" {% if org.kind=='حكومي' %}selected{% endif %}>حكومي</option>
+          <option value="خاص" {% if org.kind=='خاص' %}selected{% endif %}>خاص</option>
+          <option value="شريك" {% if org.kind=='شريك' %}selected{% endif %}>شريك</option>
+        </select>
+        <button class="btn btn-outline-primary" type="submit">تعديل</button>
+      </form>
+      <form method="post" action="{{ url_for('admin.catalog_org_delete', org_id=org.id) }}" class="d-inline" onsubmit="return confirm('حذف الجهة وخدماتها؟')">
+        <button class="btn btn-outline-danger" type="submit">حذف</button>
+      </form>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>الخدمة</th><th>الوصف</th><th>نشطة</th><th style="width:220px"></th></tr></thead>
+        <tbody>
+        {% for s in org.services %}
+          <tr>
+            <form method="post" action="{{ url_for('admin.catalog_service_edit', svc_id=s.id) }}">
+            <td style="min-width:220px"><input class="form-control" name="name" value="{{ s.name }}"></td>
+            <td><input class="form-control" name="description" value="{{ s.description or '' }}"></td>
+            <td class="text-center"><input class="form-check-input" type="checkbox" name="is_active" {% if s.is_active %}checked{% endif %}></td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-primary" type="submit">حفظ</button>
+              <form method="post" action="{{ url_for('admin.catalog_service_delete', svc_id=s.id) }}" class="d-inline" onsubmit="return confirm('حذف الخدمة؟')">
+                <button class="btn btn-sm btn-outline-danger" type="submit">حذف</button>
+              </form>
+            </td>
+            </form>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="text-muted text-center">لا توجد خدمات</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <form class="row g-2" method="post" action="{{ url_for('admin.catalog_service_create', org_id=org.id) }}">
+      <div class="col-md-4"><input class="form-control" name="name" placeholder="اسم الخدمة" required></div>
+      <div class="col-md-6"><input class="form-control" name="description" placeholder="وصف الخدمة (اختياري)"></div>
+      <div class="col-md-2"><button class="btn btn-success w-100" type="submit">+ إضافة خدمة</button></div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
