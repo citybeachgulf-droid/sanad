@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from flask_login import login_required, current_user
 from app import db
 from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord, ManagedTransaction, ClientContact, ClientNote, Task, Invoice, InvoicePayment, Income
-from app.forms import ClientForm, TransactionForm
+from app.forms import ClientForm
 
 main_bp = Blueprint('main', __name__)
 
@@ -193,25 +193,6 @@ def client_add_note(client_id):
     db.session.commit()
     flash('تمت إضافة الملاحظة', 'success')
     return redirect(url_for('main.client_detail', client_id=client.id))
-
-
-@main_bp.route('/transactions/new', methods=['GET','POST'])
-@login_required
-def new_transaction():
-    form = TransactionForm()
-    if form.validate_on_submit():
-        t = Transaction(
-            client_id=int(form.client_id.data),
-            service_type=form.service_type.data,
-            office=form.office.data,
-            fee=form.fee.data or 0,
-            details=form.details.data,
-        )
-        db.session.add(t)
-        db.session.commit()
-        flash('Transaction created.')
-        return redirect(url_for('main.transactions_new'))
-    return render_template('transaction_form.html', form=form)
 
 
 # Government transactions - add page
