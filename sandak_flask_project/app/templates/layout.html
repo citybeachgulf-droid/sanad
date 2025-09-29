@@ -33,38 +33,29 @@
           {% include 'sidebar.html' %}
         </aside>
         <section class="col-md-8 col-lg-9">
-          <div class="flash-messages">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                {% for category, message in messages %}
-                  <div class="alert alert-{{ 'warning' if category=='message' else category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-                {% endfor %}
-              {% endif %}
-            {% endwith %}
-          </div>
-
           {% block content %}{% endblock %}
         </section>
       </div>
       {% else %}
-      <div class="flash-messages">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ 'warning' if category=='message' else category }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-      </div>
       {{ self.content() }}
       {% endif %}
     </main>
+
+    <!-- Toasts container for flash messages -->
+    <div class="toast-container position-fixed bottom-0 start-0 p-3" style="z-index: 1080;" id="toastContainer">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+          <div class="toast align-items-center text-bg-{{ 'warning' if category=='message' else category }} border-0" role="status" aria-live="polite" aria-atomic="true" data-bs-delay="4000">
+            <div class="d-flex">
+              <div class="toast-body">{{ message }}</div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
 
     {% block modals %}{% endblock %}
 

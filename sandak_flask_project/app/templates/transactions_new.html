@@ -33,9 +33,16 @@
 </form>
 
 <div class="card shadow-sm rounded-3">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span class="small text-muted">عدد النتائج: {{ items|length }}</span>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-sm btn-outline-secondary js-export-print">طباعة</button>
+      <button type="button" class="btn btn-sm btn-outline-primary js-export-csv" data-filename="new-transactions.csv">تصدير CSV</button>
+    </div>
+  </div>
   <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table align-middle table-hover mb-0">
+    <div class="table-responsive table-sticky">
+      <table class="table align-middle table-hover mb-0" data-enhance="table">
         <thead class="table-light">
           <tr>
             <th>العميل</th>

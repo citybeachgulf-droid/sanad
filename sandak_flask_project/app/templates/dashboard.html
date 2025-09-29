@@ -144,7 +144,14 @@
     </div>
 
     <!-- جدول المعاملات -->
-    <div class="table-responsive">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="text-muted small">آخر {{ items|length }} سجل</div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary js-export-print">طباعة</button>
+        <button type="button" class="btn btn-sm btn-outline-primary js-export-csv" data-filename="transactions.csv">تصدير CSV</button>
+      </div>
+    </div>
+    <div class="table-responsive table-sticky">
       <table class="table align-middle table-hover mb-0" data-enhance="table">
         <thead class="table-light">
           <tr>
