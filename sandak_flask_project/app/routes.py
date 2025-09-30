@@ -1,23 +1,25 @@
-<<<<<<< HEAD
-# app/routes.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-=======
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, send_from_directory
 from datetime import datetime, timedelta
->>>>>>> 24e1181ec06457744d100584ea278f45d04104ba
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 from app import db
-from app.models import Transaction, ManagedTransaction, User, Income, Client
+from app.models import (
+    Transaction,
+    ManagedTransaction,
+    User,
+    Income,
+    Client,
+    ClientContact,
+    ClientNote,
+    Ministry,
+    Service,
+    Organization,
+    OrgService,
+    TransactionRecord,
+)
 
 
 # ------------------- Main Blueprint -------------------
-main_bp = Blueprint('main', __name__)
-
-# تعيين url_prefix بشكل صريح لتفادي تعارضات مستقبلية مع المسارات
-main_bp = Blueprint('main', __name__, url_prefix='')
-
-# تعيين url_prefix بشكل صريح لتفادي تعارضات مستقبلية مع المسارات
 main_bp = Blueprint('main', __name__, url_prefix='')
 
 
@@ -57,41 +59,27 @@ transactions_bp = Blueprint('transactions', __name__, url_prefix='/transactions'
 
 @transactions_bp.route('/')
 @login_required
-<<<<<<< HEAD
 def list_transactions():
-    status = request.args.get('status', '').strip()
-=======
-def clients():
-    q = (request.args.get('q') or '').strip()
-    clients_q = Client.query
-    if q:
-        clients_q = clients_q.filter(
-            (Client.name.ilike(f"%{q}%")) | (Client.phone.ilike(f"%{q}%")) | (Client.email.ilike(f"%{q}%"))
-        )
-    clients = clients_q.order_by(Client.created_at.desc()).all()
-    # Pull contacts and latest notes counts per client
-    contacts_map = {}
-    notes_count_map = {}
-    if clients:
-        client_ids = [c.id for c in clients]
-        contact_rows = ClientContact.query.filter(ClientContact.client_id.in_(client_ids)).all()
-        for r in contact_rows:
-            contacts_map.setdefault(r.client_id, []).append(r)
-        from sqlalchemy import func
-        notes_rows = (
-            db.session.query(ClientNote.client_id, func.count(ClientNote.id))
-            .filter(ClientNote.client_id.in_(client_ids))
-            .group_by(ClientNote.client_id)
-            .all()
-        )
-        for cid, cnt in notes_rows:
-            notes_count_map[cid] = int(cnt)
-    return render_template('clients.html', clients=clients, contacts_map=contacts_map, notes_count_map=notes_count_map, q=q)
+    status = (request.args.get('status') or '').strip()
+    employee_id = request.args.get('employee_id', type=int)
+    service_type = (request.args.get('service_type') or '').strip()
+    q = Transaction.query
+    if status:
+        q = q.filter(Transaction.status == status)
+    if employee_id:
+        q = q.filter(Transaction.assigned_to == employee_id)
+    if service_type:
+        q = q.filter(Transaction.service_type.ilike(f"%{service_type}%"))
+    items = q.order_by(Transaction.created_at.desc()).all()
+    employees = User.query.order_by(User.username.asc()).all()
+    return render_template('transactions/list.html', items=items, employees=employees,
+                           status=status, employee_id=employee_id, service_type=service_type)
 
 
 @main_bp.route('/clients/new', methods=['GET','POST'])
 @login_required
 def new_client():
+    from app.forms import ClientForm
     form = ClientForm()
     if form.validate_on_submit():
         c = Client(name=form.name.data, phone=form.phone.data, email=form.email.data, national_id=form.national_id.data)
@@ -315,11 +303,9 @@ def api_org_services(org_id):
 @main_bp.route('/transactions/new-items')
 @login_required
 def transactions_new():
-    now = datetime.utcnow()
->>>>>>> 24e1181ec06457744d100584ea278f45d04104ba
+    status = (request.args.get('status') or 'new').strip()
     employee_id = request.args.get('employee_id', type=int)
-    service_type = request.args.get('service_type', '').strip()
-
+    service_type = (request.args.get('service_type') or '').strip()
     q = Transaction.query
     if status:
         q = q.filter(Transaction.status == status)
@@ -327,7 +313,6 @@ def transactions_new():
         q = q.filter(Transaction.assigned_to == employee_id)
     if service_type:
         q = q.filter(Transaction.service_type.ilike(f"%{service_type}%"))
-
     items = q.order_by(Transaction.created_at.desc()).all()
     employees = User.query.order_by(User.username.asc()).all()
     return render_template('transactions/list.html', items=items, employees=employees,
