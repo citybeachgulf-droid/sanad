@@ -1,14 +1,25 @@
-<<<<<<< HEAD
 # app/routes.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-=======
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, send_from_directory
 from datetime import datetime, timedelta
->>>>>>> 24e1181ec06457744d100584ea278f45d04104ba
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 from app import db
-from app.models import Transaction, ManagedTransaction, User, Income, Client
+from flask import request
+from app.forms import ClientForm
+from app.models import TransactionRecord
+from app.models import (
+    Transaction, 
+    ManagedTransaction, 
+    User, 
+    Income, 
+    Client,
+    ClientContact,
+    ClientNote,
+    Ministry,
+    Service,
+    Organization,
+    OrgService
+)
 
 
 # ------------------- Main Blueprint -------------------
@@ -57,10 +68,8 @@ transactions_bp = Blueprint('transactions', __name__, url_prefix='/transactions'
 
 @transactions_bp.route('/')
 @login_required
-<<<<<<< HEAD
 def list_transactions():
     status = request.args.get('status', '').strip()
-=======
 def clients():
     q = (request.args.get('q') or '').strip()
     clients_q = Client.query
@@ -316,9 +325,11 @@ def api_org_services(org_id):
 @login_required
 def transactions_new():
     now = datetime.utcnow()
->>>>>>> 24e1181ec06457744d100584ea278f45d04104ba
     employee_id = request.args.get('employee_id', type=int)
     service_type = request.args.get('service_type', '').strip()
+    status = request.args.get('status')         # أو request.form.get('status') إذا كانت من POST
+    employee_id = request.args.get('employee_id')
+    service_type = request.args.get('service_type')
 
     q = Transaction.query
     if status:
@@ -459,3 +470,12 @@ def delete_service(id):
     db.session.commit()
     flash('تم حذف الخدمة', 'success')
     return redirect(url_for('catalog.list_services', id=AUTHORITIES.index(service.authority)))
+
+
+
+
+
+@main_bp.route('/clients')
+def clients():
+    clients_list = Client.query.all()
+    return render_template('clients/list.html', clients=clients_list)

@@ -17,6 +17,9 @@ class ClientForm(FlaskForm):
     submit = SubmitField('Save')
 
 
+
+
+
 class TransactionForm(FlaskForm):
     client_id = StringField('Client ID', validators=[DataRequired()])
     service_type = StringField('Service Type', validators=[DataRequired()])
