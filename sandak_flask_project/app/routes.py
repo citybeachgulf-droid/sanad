@@ -54,7 +54,7 @@ def dashboard():
     if service_type:
         q = q.filter(Transaction.service_type.ilike(f"%{service_type}%"))
 
-    items = q.order_by(Transaction.created_at.desc()).limit(100).all()
+    items = q.order_by(Transaction.created_at.desc()).all()
 
     # Near deadlines (within 24h) for alerts
     near_deadline = (
@@ -64,7 +64,6 @@ def dashboard():
         .filter(Transaction.due_date >= now)
         .filter(Transaction.due_date <= now + timedelta(days=1))
         .order_by(Transaction.due_date.asc())
-        .limit(10)
         .all()
     )
 
@@ -576,7 +575,7 @@ def custom_reports():
         except Exception:
             pass
 
-    items = q.order_by(Transaction.created_at.desc()).limit(500).all()
+    items = q.order_by(Transaction.created_at.desc()).all()
     employees = User.query.order_by(User.username.asc()).all()
     clients = Client.query.order_by(Client.name.asc()).all()
     return render_template('admin/custom_reports.html', items=items, employees=employees, clients=clients, employee_id=employee_id, client_id=client_id, date_from=date_from, date_to=date_to, tx_status=tx_status)

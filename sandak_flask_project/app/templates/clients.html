@@ -43,12 +43,9 @@
                 <td>
                   {% set contacts = contacts_map.get(c.id, []) %}
                   {% if contacts %}
-                    {% for ct in contacts[:3] %}
+                    {% for ct in contacts %}
                       <span class="badge bg-secondary">{{ ct.kind }}: {{ ct.value }}</span>
                     {% endfor %}
-                    {% if contacts|length > 3 %}
-                      <span class="text-muted small">+{{ contacts|length - 3 }}</span>
-                    {% endif %}
                   {% else %}
                     <span class="text-muted">لا توجد</span>
                   {% endif %}

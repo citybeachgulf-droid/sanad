@@ -29,12 +29,13 @@ document.addEventListener('DOMContentLoaded', function () {
           searchable: true,
           // Allow the table to grow naturally so more rows are visible
           fixedHeight: false,
-          // Show more rows by default and allow user to change page size
-          perPage: 25,
-          perPageSelect: [10, 25, 50, 100],
+          // Disable pagination to show all rows
+          paging: false,
+          perPage: 0,
+          perPageSelect: false,
           labels: {
             placeholder: 'بحث...',
-            perPage: '{select} لكل صفحة',
+            perPage: '',
             noRows: 'لا توجد بيانات',
             info: 'إظهار {start} إلى {end} من {rows} صف'
           }
