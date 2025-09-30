@@ -27,7 +27,11 @@ document.addEventListener('DOMContentLoaded', function () {
       document.querySelectorAll('table[data-enhance="table"]').forEach(function (tbl) {
         const options = {
           searchable: true,
-          fixedHeight: true,
+          // Allow the table to grow naturally so more rows are visible
+          fixedHeight: false,
+          // Show more rows by default and allow user to change page size
+          perPage: 25,
+          perPageSelect: [10, 25, 50, 100],
           labels: {
             placeholder: 'بحث...',
             perPage: '{select} لكل صفحة',
