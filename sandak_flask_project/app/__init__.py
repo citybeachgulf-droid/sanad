@@ -4,6 +4,10 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from config import Config
 from flask.cli import with_appcontext
+import os
+import logging
+from logging.handlers import RotatingFileHandler
+from flask import got_request_exception, request
 import click
 
 db = SQLAlchemy()
@@ -19,6 +23,43 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
+
+    # ---------------- Logging & Error Handling ----------------
+    # تفعيل تسجيل الأخطاء في ملف دوّار لسهولة التتبع في بيئة الإنتاج
+    # NOTE: نستخدم RotatingFileHandler لمنع تضخم ملف السجلات
+    try:
+        logs_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), '..'))
+        log_path = os.path.join(logs_dir, 'flask_8001.log')
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        file_handler = RotatingFileHandler(log_path, maxBytes=5 * 1024 * 1024, backupCount=3, encoding='utf-8')
+        file_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+        file_handler.setFormatter(formatter)
+        if not any(isinstance(h, RotatingFileHandler) for h in app.logger.handlers):
+            app.logger.addHandler(file_handler)
+        app.logger.setLevel(logging.INFO)
+    except Exception:
+        # في حال فشل تهيئة السجلات لا نمنع تشغيل التطبيق
+        pass
+
+    # ربط إشارة الأخطاء غير المعالجة لتسجيل تفاصيل الطلب والمسار
+    def _log_exception(_sender, exception, **extra):
+        try:
+            app.logger.exception(f"Unhandled exception at {request.method} {request.path}: {exception}")
+        except Exception:
+            # تجنب تعطل المعالج نفسه
+            pass
+
+    got_request_exception.connect(_log_exception, app)
+
+    @app.teardown_request
+    def _teardown_request(exc):
+        # عند حدوث استثناء ضمن الطلب: نقوم بعمل rollback لجلسة قاعدة البيانات
+        if exc:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
 
     # ---------------- Schema compatibility ----------------
     def ensure_schema_compatibility():

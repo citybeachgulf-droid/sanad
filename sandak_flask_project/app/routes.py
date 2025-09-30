@@ -5,7 +5,8 @@ from app import db
 from app.models import User, Client, Transaction, Payment, Ministry, Service, TransactionRecord, ManagedTransaction, ClientContact, ClientNote, Task, Invoice, InvoicePayment, Income, Organization, OrgService
 from app.forms import ClientForm
 
-main_bp = Blueprint('main', __name__)
+# تعيين url_prefix بشكل صريح لتفادي تعارضات مستقبلية مع المسارات
+main_bp = Blueprint('main', __name__, url_prefix='')
 
 
 @main_bp.route('/')
