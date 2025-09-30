@@ -2,6 +2,7 @@
 {% block title %}لوحة التحكم{% endblock %}
 
 {% block content %}
+<!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="mb-3">
   <ol class="breadcrumb mb-0">
     <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">الرئيسية</a></li>
@@ -9,84 +10,89 @@
   </ol>
 </nav>
 
+<!-- Header with Buttons -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-2">
+  <h3 class="mb-0">لوحة التحكم</h3>
+  <div class="d-flex flex-wrap gap-2">
+    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+    <a class="btn btn-primary" href="{{ url_for('admin.employees_create') }}">
+      <i class="fa fa-user-plus me-1"></i> إضافة موظف
+    </a>
+    {% endif %}
+    <a class="btn btn-outline-primary" href="{{ url_for('main.clients') }}">
+      <i class="fa fa-users me-1"></i> إدارة العملاء
+    </a>
+  </div>
+</div>
 
-
-<!-- بطاقات الإحصاءات -->
+<!-- Statistics Cards -->
 <div class="row g-3 mb-4">
   {% set stats_cards = [
-    {'title':'عدد العملاء','value':total_clients,'icon':'fa-users','color':'primary','url': url_for('main.clients')},
-    {'title':'عدد المعاملات','value':total_transactions,'icon':'fa-file-lines','color':'success','url': url_for('main.transactions_new')},
-    {'title':'قيد الإجراء','value':in_progress_count,'icon':'fa-hourglass-half','color':'warning','url': url_for('main.dashboard', status='in_progress')},
-    {'title':'المعاملات المتأخرة','value':overdue_count,'icon':'fa-triangle-exclamation','color':'danger','url': url_for('main.dashboard', status='overdue')}
+    ('عدد العملاء', total_clients, 'fa-users', 'primary', url_for('main.clients')),
+    ('عدد المعاملات', total_transactions, 'fa-file-lines', 'success', url_for('main.dashboard')),
+    ('قيد الإجراء', in_progress_count, 'fa-hourglass-half', 'warning', url_for('main.dashboard', status='in_progress')),
+    ('المعاملات المتأخرة', overdue_count, 'fa-triangle-exclamation', 'danger', url_for('main.dashboard', status='overdue'))
   ] %}
-  {% for card in stats_cards %}
+  {% for title, value, icon, color, url in stats_cards %}
   <div class="col-6 col-md-3">
-    <div class="card shadow-sm border-0 border-start border-5 border-{{ card.color }} rounded-3 hover-scale position-relative">
-      <div class="card-body d-flex align-items-center">
-        <div class="flex-shrink-0 me-3 text-{{ card.color }}">
-          <i class="fa-solid {{ card.icon }}" style="font-size:32px;"></i>
+    <div class="card shadow-sm border-0 border-start border-5 border-{{ color }} rounded-3 hover-scale position-relative">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="text-{{ color }}" style="font-size:32px;">
+          <i class="fa-solid {{ icon }}"></i>
         </div>
         <div>
-          <div class="text-muted small">{{ card.title }}</div>
-          <div class="h4 mb-0">{{ card.value }}</div>
+          <div class="text-muted small">{{ title }}</div>
+          <div class="h4 fw-bold mb-0">{{ value }}</div>
         </div>
       </div>
-      {% if card.title == 'عدد المعاملات' %}
+      {% if title == 'عدد المعاملات' %}
       <div class="card-footer bg-white border-0 pt-0 px-3 pb-3">
         <div class="d-flex gap-3 flex-wrap small">
-          <a href="{{ url_for('main.dashboard', status='completed') }}" class="text-success text-decoration-none">
-            منتهية
-          </a>
-          <a href="{{ url_for('main.dashboard', status='overdue') }}" class="text-danger text-decoration-none">
-            متأخرة
-          </a>
-          <a href="{{ url_for('main.dashboard', status='in_progress') }}" class="text-warning text-decoration-none">
-            قيد الإجراء
-          </a>
+          <a href="{{ url_for('main.dashboard', status='completed') }}" class="text-success text-decoration-none">منتهية</a>
+          <a href="{{ url_for('main.dashboard', status='overdue') }}" class="text-danger text-decoration-none">متأخرة</a>
+          <a href="{{ url_for('main.dashboard', status='in_progress') }}" class="text-warning text-decoration-none">قيد الإجراء</a>
         </div>
       </div>
-      <a href="{{ url_for('main.transactions_new') }}" class="stretched-link" aria-label="فتح صفحة المعاملات التي تم إنشاؤها"></a>
-      {% else %}
-      <a href="{{ card.url }}" class="stretched-link"></a>
       {% endif %}
+      <a href="{{ url }}" class="stretched-link"></a>
     </div>
   </div>
   {% endfor %}
 </div>
 
 {% if current_user.is_authenticated and current_user.role == 'admin' %}
-<!-- بطاقات إضافية للمدير -->
+<!-- Admin Additional Cards -->
 <div class="row g-3 mb-4">
   <div class="col-6 col-md-3">
     <div class="card shadow-sm border-0 border-start border-5 border-info rounded-3 hover-scale">
-      <div class="card-body d-flex align-items-center">
-        <div class="flex-shrink-0 me-3 text-info"><i class="fa-solid fa-users" style="font-size:32px;"></i></div>
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="text-info" style="font-size:32px;"><i class="fa-solid fa-users"></i></div>
         <div>
           <div class="text-muted small">عدد الموظفين</div>
-          <div class="h4 mb-0" id="metricEmployees">-</div>
+          <div class="h4 fw-bold mb-0" id="metricEmployees">-</div>
         </div>
       </div>
     </div>
   </div>
   <div class="col-6 col-md-3">
     <div class="card shadow-sm border-0 border-start border-5 border-success rounded-3 hover-scale">
-      <div class="card-body d-flex align-items-center">
-        <div class="flex-shrink-0 me-3 text-success"><i class="fa-solid fa-sack-dollar" style="font-size:32px;"></i></div>
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="text-success" style="font-size:32px;"><i class="fa-solid fa-sack-dollar"></i></div>
         <div>
           <div class="text-muted small">إجمالي المدفوعات</div>
-          <div class="h4 mb-0" id="metricPayments">-</div>
+          <div class="h4 fw-bold mb-0" id="metricPayments">-</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- مخطط توزيع المعاملات حسب الوزارة -->
+<!-- Chart: Transactions by Ministry -->
 <div class="card shadow-sm mb-4 rounded-3">
   <div class="card-header bg-white">
     <h6 class="mb-0">توزيع المعاملات حسب الوزارة</h6>
   </div>
-  <div class="card-body">
+  <div class="card-body p-3">
     <canvas id="ministryChart" height="100"></canvas>
   </div>
   <div class="card-footer text-muted small">
@@ -95,14 +101,13 @@
 </div>
 {% endif %}
 
-<!-- نظرة عامة وجدول المعاملات -->
+<!-- Transactions Overview Table -->
 <div class="card shadow-sm rounded-3">
   <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
     <h6 class="mb-0">نظرة عامة</h6>
-    <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse" aria-expanded="false" aria-controls="filtersCollapse">
-        <i class="fa-solid fa-filter ms-1"></i>
-        تصفية
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse" aria-expanded="false">
+        <i class="fa-solid fa-filter ms-1"></i> تصفية
       </button>
       <a href="{{ url_for('main.clients') }}" class="btn btn-sm btn-primary">إدارة العملاء</a>
       {% if current_user.is_authenticated and current_user.role == 'admin' %}
@@ -111,46 +116,48 @@
     </div>
   </div>
   <div class="card-body">
-    <!-- نموذج التصفية -->
+    <!-- Filter Form -->
     <div class="collapse mb-3" id="filtersCollapse">
       <form class="row g-2 align-items-end" method="get">
-      <div class="col-md-3">
-        <label class="form-label small">الحالة</label>
-        <select class="form-select" name="status">
-          <option value="">الكل</option>
-          <option value="new" {{ 'selected' if status=='new' else '' }}>جديدة</option>
-          <option value="in_progress" {{ 'selected' if status=='in_progress' else '' }}>تحت الإجراء</option>
-          <option value="completed" {{ 'selected' if status=='completed' else '' }}>منتهية</option>
-          <option value="overdue" {{ 'selected' if status=='overdue' else '' }}>متأخرة</option>
-        </select>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label small">الموظف المسؤول</label>
-        <select class="form-select" name="employee_id">
-          <option value="">الكل</option>
-          {% for emp in employees %}
-          <option value="{{ emp.id }}" {{ 'selected' if employee_id==emp.id else '' }}>{{ emp.username }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label small">نوع المعاملة</label>
-        <input class="form-control" name="service_type" value="{{ service_type or '' }}" placeholder="بحث عن نوع الخدمة">
-      </div>
-      <div class="col-md-3">
-        <button class="btn btn-outline-primary w-100" type="submit">تصفية</button>
-      </div>
+        <div class="col-md-3">
+          <label class="form-label small">الحالة</label>
+          <select class="form-select" name="status">
+            <option value="">الكل</option>
+            <option value="new" {{ 'selected' if status=='new' else '' }}>جديدة</option>
+            <option value="in_progress" {{ 'selected' if status=='in_progress' else '' }}>تحت الإجراء</option>
+            <option value="completed" {{ 'selected' if status=='completed' else '' }}>منتهية</option>
+            <option value="overdue" {{ 'selected' if status=='overdue' else '' }}>متأخرة</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small">الموظف المسؤول</label>
+          <select class="form-select" name="employee_id">
+            <option value="">الكل</option>
+            {% for emp in employees %}
+            <option value="{{ emp.id }}" {{ 'selected' if employee_id==emp.id else '' }}>{{ emp.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small">نوع المعاملة</label>
+          <input class="form-control" name="service_type" value="{{ service_type or '' }}" placeholder="بحث عن نوع الخدمة">
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-outline-primary w-100" type="submit">تصفية</button>
+        </div>
       </form>
     </div>
 
-    <!-- جدول المعاملات -->
-    <div class="d-flex justify-content-between align-items-center mb-2">
+    <!-- Table Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
       <div class="text-muted small">آخر {{ items|length }} سجل</div>
-      <div class="d-flex gap-2">
+      <div class="d-flex gap-2 flex-wrap">
         <button type="button" class="btn btn-sm btn-outline-secondary js-export-print">طباعة</button>
         <button type="button" class="btn btn-sm btn-outline-primary js-export-csv" data-filename="transactions.csv">تصدير CSV</button>
       </div>
     </div>
+
+    <!-- Transactions Table -->
     <div class="table-responsive table-sticky">
       <table class="table align-middle table-hover mb-0" data-enhance="table">
         <thead class="table-light">
@@ -180,24 +187,22 @@
             <td class="text-muted small d-none d-lg-table-cell">{{ t.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
             <td class="text-muted small d-none d-lg-table-cell">{{ t.due_date.strftime('%Y-%m-%d %H:%M') if t.due_date else '-' }}</td>
             <td>
-              <!-- تعيين المسؤول -->
-              <form class="d-inline" method="post" action="{{ url_for('main.update_transaction_status', transaction_id=t.id) }}">
-                <div class="d-flex gap-2 flex-wrap align-items-center">
+              <div class="d-flex gap-2 flex-wrap align-items-center">
+                <form class="d-inline flex-grow-1" method="post" action="{{ url_for('main.update_transaction_status', transaction_id=t.id) }}">
                   <input type="hidden" name="status" value="{{ t.status }}">
-                  <select class="form-select form-select-sm" name="assigned_to" style="width: 160px;">
+                  <select class="form-select form-select-sm" name="assigned_to">
                     <option value="">بدون تعيين</option>
                     {% for emp in employees %}
                     <option value="{{ emp.id }}" {{ 'selected' if t.assigned_to==emp.id else '' }}>{{ emp.username }}</option>
                     {% endfor %}
                   </select>
-                  <button class="btn btn-sm btn-outline-primary" type="submit">حفظ</button>
-                </div>
-              </form>
-              <!-- إتمام المعاملة -->
-              <form class="d-inline ms-1" method="post" action="{{ url_for('main.update_transaction_status', transaction_id=t.id) }}">
-                <input type="hidden" name="status" value="completed">
-                <button class="btn btn-sm btn-success" type="submit">إتمام</button>
-              </form>
+                  <button class="btn btn-sm btn-outline-primary mt-1 w-100" type="submit">حفظ</button>
+                </form>
+                <form class="d-inline ms-1 flex-grow-0" method="post" action="{{ url_for('main.update_transaction_status', transaction_id=t.id) }}">
+                  <input type="hidden" name="status" value="completed">
+                  <button class="btn btn-sm btn-success mt-1 w-100" type="submit">إتمام</button>
+                </form>
+              </div>
             </td>
           </tr>
           {% else %}
@@ -206,13 +211,21 @@
         </tbody>
       </table>
     </div>
-
   </div>
 </div>
 
 {% endblock %}
 
 {% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+  })
+});
+</script>
+
 {% if current_user.is_authenticated and current_user.role == 'admin' %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
@@ -242,4 +255,20 @@
 })();
 </script>
 {% endif %}
+
+<style>
+.hover-scale {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-scale:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+.table-sticky thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 10;
+}
+</style>
 {% endblock %}

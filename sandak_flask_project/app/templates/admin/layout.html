@@ -1,5 +1,4 @@
 {% extends 'layout.html' %}
-{% block title %}{% endblock %}
-{% block content %}
-  {% block content %}{% endblock %}
-{% endblock %}
+{# قالب وسيط للقسم الإداري: يرث تخطيط الموقع بدون إعادة تعريف كتل متداخلة #}
+{% block head %}{{ super() }}{% endblock %}
+{% block content %}{{ super() }}{% endblock %}
