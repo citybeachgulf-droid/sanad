@@ -187,6 +187,10 @@ class Invoice(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # علاقة للوصول إلى العميل من الفاتورة — إصلاح لمشاكل القوالب التي تستخدم inv.client
+    # هذا يضمن أن التعبير {{ inv.client.name }} يعمل بدون أخطاء.
+    client = db.relationship('Client', backref='invoices')
+
 
 class InvoicePayment(db.Model):
     __tablename__ = 'invoice_payments'
