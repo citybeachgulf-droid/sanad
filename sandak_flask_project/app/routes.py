@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 # app/routes.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+=======
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, send_from_directory
+from datetime import datetime, timedelta
+>>>>>>> 24e1181ec06457744d100584ea278f45d04104ba
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 from app import db
@@ -52,8 +57,266 @@ transactions_bp = Blueprint('transactions', __name__, url_prefix='/transactions'
 
 @transactions_bp.route('/')
 @login_required
+<<<<<<< HEAD
 def list_transactions():
     status = request.args.get('status', '').strip()
+=======
+def clients():
+    q = (request.args.get('q') or '').strip()
+    clients_q = Client.query
+    if q:
+        clients_q = clients_q.filter(
+            (Client.name.ilike(f"%{q}%")) | (Client.phone.ilike(f"%{q}%")) | (Client.email.ilike(f"%{q}%"))
+        )
+    clients = clients_q.order_by(Client.created_at.desc()).all()
+    # Pull contacts and latest notes counts per client
+    contacts_map = {}
+    notes_count_map = {}
+    if clients:
+        client_ids = [c.id for c in clients]
+        contact_rows = ClientContact.query.filter(ClientContact.client_id.in_(client_ids)).all()
+        for r in contact_rows:
+            contacts_map.setdefault(r.client_id, []).append(r)
+        from sqlalchemy import func
+        notes_rows = (
+            db.session.query(ClientNote.client_id, func.count(ClientNote.id))
+            .filter(ClientNote.client_id.in_(client_ids))
+            .group_by(ClientNote.client_id)
+            .all()
+        )
+        for cid, cnt in notes_rows:
+            notes_count_map[cid] = int(cnt)
+    return render_template('clients.html', clients=clients, contacts_map=contacts_map, notes_count_map=notes_count_map, q=q)
+
+
+@main_bp.route('/clients/new', methods=['GET','POST'])
+@login_required
+def new_client():
+    form = ClientForm()
+    if form.validate_on_submit():
+        c = Client(name=form.name.data, phone=form.phone.data, email=form.email.data, national_id=form.national_id.data)
+        db.session.add(c)
+        db.session.commit()
+        flash('Client created.')
+        return redirect(url_for('main.clients'))
+    return render_template('client_form.html', form=form)
+
+
+@main_bp.route('/clients/<int:client_id>')
+@login_required
+def client_detail(client_id):
+    client = Client.query.get_or_404(client_id)
+    # Filters for history
+    date_from = (request.args.get('date_from') or '').strip()
+    date_to = (request.args.get('date_to') or '').strip()
+    tx_type = (request.args.get('tx_type') or '').strip()
+
+    tx_q = Transaction.query.filter_by(client_id=client.id)
+    if tx_type:
+        tx_q = tx_q.filter(Transaction.service_type.ilike(f"%{tx_type}%"))
+    from datetime import datetime as dt
+    if date_from:
+        try:
+            tx_q = tx_q.filter(Transaction.created_at >= dt.fromisoformat(date_from))
+        except Exception:
+            pass
+    if date_to:
+        try:
+            tx_q = tx_q.filter(Transaction.created_at <= dt.fromisoformat(date_to))
+        except Exception:
+            pass
+    tx_items = tx_q.order_by(Transaction.created_at.desc()).all()
+
+    contacts = ClientContact.query.filter_by(client_id=client.id).order_by(ClientContact.is_primary.desc(), ClientContact.id.desc()).all()
+    notes = ClientNote.query.filter_by(client_id=client.id).order_by(ClientNote.created_at.desc()).all()
+    return render_template('client_detail.html', client=client, contacts=contacts, notes=notes, tx_items=tx_items, date_from=date_from, date_to=date_to, tx_type=tx_type)
+
+
+@main_bp.route('/clients/<int:client_id>/contacts/add', methods=['POST'])
+@login_required
+def client_add_contact(client_id):
+    client = Client.query.get_or_404(client_id)
+    kind = (request.form.get('kind') or 'phone').strip()
+    value = (request.form.get('value') or '').strip()
+    is_primary = bool(request.form.get('is_primary'))
+    if not value:
+        flash('قيمة وسيلة التواصل مطلوبة', 'warning')
+        return redirect(url_for('main.client_detail', client_id=client.id))
+    if is_primary:
+        # unset others
+        ClientContact.query.filter_by(client_id=client.id).update({ClientContact.is_primary: False})
+    db.session.add(ClientContact(client_id=client.id, kind=kind, value=value, is_primary=is_primary))
+    db.session.commit()
+    flash('تمت إضافة وسيلة التواصل', 'success')
+    return redirect(url_for('main.client_detail', client_id=client.id))
+
+
+@main_bp.route('/clients/<int:client_id>/notes/add', methods=['POST'])
+@login_required
+def client_add_note(client_id):
+    client = Client.query.get_or_404(client_id)
+    content = (request.form.get('content') or '').strip()
+    if not content:
+        flash('الملاحظة مطلوبة', 'warning')
+        return redirect(url_for('main.client_detail', client_id=client.id))
+    db.session.add(ClientNote(client_id=client.id, content=content, created_by=current_user.id))
+    db.session.commit()
+    flash('تمت إضافة الملاحظة', 'success')
+    return redirect(url_for('main.client_detail', client_id=client.id))
+
+
+# Government transactions - add page
+@main_bp.route('/gov/transactions/new', methods=['GET', 'POST'])
+@login_required
+def add_gov_transaction():
+    if request.method == 'POST':
+        client_name = request.form.get('client_name', '').strip()
+        client_phone = (request.form.get('client_phone') or '').strip()
+        ministry_id = request.form.get('ministry_id')
+        service_id = request.form.get('service_id')
+        notes = request.form.get('notes')
+
+        if not client_name or not ministry_id or not service_id:
+            flash('الرجاء تعبئة جميع الحقول المطلوبة', 'danger')
+            ministries = Ministry.query.order_by(Ministry.name).all()
+            return render_template('add_transaction.html', ministries=ministries)
+
+        # Upsert client into Clients page (save name and phone)
+        client_row = None
+        if client_phone:
+            # Try to find by exact phone match first
+            client_row = Client.query.filter(Client.phone == client_phone).first()
+        if not client_row and client_name:
+            # Fallback to name match if no phone match
+            client_row = Client.query.filter(Client.name == client_name).first()
+        if not client_row:
+            client_row = Client(name=client_name, phone=client_phone or None)
+            db.session.add(client_row)
+            db.session.flush()
+        else:
+            # Update missing phone on existing client if provided
+            if client_phone and not (client_row.phone and client_row.phone.strip()):
+                client_row.phone = client_phone
+                db.session.flush()
+
+        # Ensure phone contact appears in Clients list badges
+        if client_phone and client_row and client_row.id:
+            exists_contact = (
+                ClientContact.query
+                .filter_by(client_id=client_row.id, kind='phone', value=client_phone)
+                .first()
+            )
+            if not exists_contact:
+                has_primary = ClientContact.query.filter_by(client_id=client_row.id, is_primary=True).first()
+                db.session.add(ClientContact(
+                    client_id=client_row.id,
+                    kind='phone',
+                    value=client_phone,
+                    is_primary=False if has_primary else True,
+                ))
+
+        rec = TransactionRecord(
+            client_name=client_name,
+            client_phone=client_phone or None,
+            ministry_id=int(ministry_id),
+            service_id=int(service_id),
+            notes=notes,
+            employee_id=current_user.id,
+        )
+        # Prevent duplicate submissions within a short window
+        from datetime import timedelta as _td
+        cutoff = datetime.utcnow() - _td(minutes=2)
+        existing = (
+            TransactionRecord.query
+            .filter(TransactionRecord.client_name == client_name)
+            .filter(TransactionRecord.ministry_id == int(ministry_id))
+            .filter(TransactionRecord.service_id == int(service_id))
+            .filter(TransactionRecord.employee_id == current_user.id)
+            .filter(TransactionRecord.created_at >= cutoff)
+            .first()
+        )
+        if existing:
+            flash('هذه المعاملة مسجلة بالفعل قبل قليل', 'warning')
+            if current_user.role == 'admin':
+                return redirect(url_for('admin.transactions_list'))
+            return redirect(url_for('main.dashboard'))
+
+        db.session.add(rec)
+        db.session.commit()
+        flash('تم حفظ المعاملة بنجاح', 'success')
+        if current_user.role == 'admin':
+            return redirect(url_for('admin.transactions_list'))
+        return redirect(url_for('main.dashboard'))
+
+    ministries = Ministry.query.order_by(Ministry.name).all()
+    return render_template('add_transaction.html', ministries=ministries)
+
+
+# Serve a basic service-worker to silence 404s in browsers expecting it
+@main_bp.route('/service-worker.js')
+def service_worker():
+    try:
+        # If a real static file exists, serve it
+        static_dir = current_app.static_folder
+        return send_from_directory(static_dir, 'service-worker.js')
+    except Exception:
+        # Fallback: serve a minimal no-op service worker
+        from flask import Response
+        content = "self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',event=>event.waitUntil(clients.claim()));self.addEventListener('fetch',()=>{});"
+        return Response(content, mimetype='application/javascript')
+
+
+# Services API for dependent dropdown
+@main_bp.route('/api/services')
+@login_required
+def api_services_by_ministry():
+    ministry_id = request.args.get('ministry_id', type=int)
+    if not ministry_id:
+        return jsonify([])
+    items = Service.query.filter_by(ministry_id=ministry_id).order_by(Service.name).all()
+    return jsonify([{'id': s.id, 'name': s.name} for s in items])
+
+
+# Catalog APIs
+@main_bp.route('/api/organizations')
+@login_required
+def api_organizations():
+    kind = request.args.get('kind')
+    q = (request.args.get('q') or '').strip()
+    query = Organization.query
+    if kind:
+        query = query.filter(Organization.kind == kind)
+    if q:
+        query = query.filter(Organization.name.ilike(f"%{q}%"))
+    orgs = query.order_by(Organization.name.asc()).all()
+    return jsonify([
+        {'id': o.id, 'name': o.name, 'kind': o.kind} for o in orgs
+    ])
+
+
+@main_bp.route('/api/organizations/<int:org_id>/services')
+@login_required
+def api_org_services(org_id):
+    only_active = request.args.get('only_active') in ('1', 'true', 'on')
+    q = (request.args.get('q') or '').strip()
+    query = OrgService.query.filter_by(organization_id=org_id)
+    if only_active:
+        query = query.filter(OrgService.is_active == True)
+    if q:
+        query = query.filter(OrgService.name.ilike(f"%{q}%"))
+    items = query.order_by(OrgService.name.asc()).all()
+    return jsonify([
+        {'id': s.id, 'name': s.name, 'description': s.description, 'is_active': bool(s.is_active)} for s in items
+    ])
+
+
+# ----------------------- New Transactions Page (status == 'new') -----------------------
+
+@main_bp.route('/transactions/new-items')
+@login_required
+def transactions_new():
+    now = datetime.utcnow()
+>>>>>>> 24e1181ec06457744d100584ea278f45d04104ba
     employee_id = request.args.get('employee_id', type=int)
     service_type = request.args.get('service_type', '').strip()
 
