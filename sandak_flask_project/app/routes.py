@@ -1,34 +1,26 @@
 # app/routes.py
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, send_from_directory
-from datetime import datetime, timedelta
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 from app import db
-from flask import request
-from app.forms import ClientForm
-from app.models import TransactionRecord
+from app.forms import ClientForm  # تأكد أن هذا موجود في forms.py وليس في models.py
 from app.models import (
-    Transaction, 
-    ManagedTransaction, 
-    User, 
-    Income, 
+    Transaction,
+    ManagedTransaction,
+    User,
+    Income,
     Client,
     ClientContact,
     ClientNote,
     Ministry,
     Service,
     Organization,
-    OrgService
+    OrgService,
+    TransactionRecord 
 )
 
 
 # ------------------- Main Blueprint -------------------
-main_bp = Blueprint('main', __name__)
-
-# تعيين url_prefix بشكل صريح لتفادي تعارضات مستقبلية مع المسارات
-main_bp = Blueprint('main', __name__, url_prefix='')
-
-# تعيين url_prefix بشكل صريح لتفادي تعارضات مستقبلية مع المسارات
 main_bp = Blueprint('main', __name__, url_prefix='')
 
 
@@ -97,10 +89,26 @@ def clients():
             notes_count_map[cid] = int(cnt)
     return render_template('clients.html', clients=clients, contacts_map=contacts_map, notes_count_map=notes_count_map, q=q)
 
+    status = (request.args.get('status') or '').strip()
+    employee_id = request.args.get('employee_id', type=int)
+    service_type = (request.args.get('service_type') or '').strip()
+    q = Transaction.query
+    if status:
+        q = q.filter(Transaction.status == status)
+    if employee_id:
+        q = q.filter(Transaction.assigned_to == employee_id)
+    if service_type:
+        q = q.filter(Transaction.service_type.ilike(f"%{service_type}%"))
+    items = q.order_by(Transaction.created_at.desc()).all()
+    employees = User.query.order_by(User.username.asc()).all()
+    return render_template('transactions/list.html', items=items, employees=employees,
+                           status=status, employee_id=employee_id, service_type=service_type)
+
 
 @main_bp.route('/clients/new', methods=['GET','POST'])
 @login_required
 def new_client():
+    from app.forms import ClientForm
     form = ClientForm()
     if form.validate_on_submit():
         c = Client(name=form.name.data, phone=form.phone.data, email=form.email.data, national_id=form.national_id.data)
@@ -331,6 +339,10 @@ def transactions_new():
     employee_id = request.args.get('employee_id')
     service_type = request.args.get('service_type')
 
+
+    status = (request.args.get('status') or 'new').strip()
+    employee_id = request.args.get('employee_id', type=int)
+    service_type = (request.args.get('service_type') or '').strip()
     q = Transaction.query
     if status:
         q = q.filter(Transaction.status == status)
@@ -338,7 +350,6 @@ def transactions_new():
         q = q.filter(Transaction.assigned_to == employee_id)
     if service_type:
         q = q.filter(Transaction.service_type.ilike(f"%{service_type}%"))
-
     items = q.order_by(Transaction.created_at.desc()).all()
     employees = User.query.order_by(User.username.asc()).all()
     return render_template('transactions/list.html', items=items, employees=employees,
