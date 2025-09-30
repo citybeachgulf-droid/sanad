@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, send_from_directory
 from datetime import datetime, timedelta
 from flask_login import login_required, current_user
 from app import db
@@ -281,6 +281,20 @@ def add_gov_transaction():
 
     ministries = Ministry.query.order_by(Ministry.name).all()
     return render_template('add_transaction.html', ministries=ministries)
+
+
+# Serve a basic service-worker to silence 404s in browsers expecting it
+@main_bp.route('/service-worker.js')
+def service_worker():
+    try:
+        # If a real static file exists, serve it
+        static_dir = current_app.static_folder
+        return send_from_directory(static_dir, 'service-worker.js')
+    except Exception:
+        # Fallback: serve a minimal no-op service worker
+        from flask import Response
+        content = "self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',event=>event.waitUntil(clients.claim()));self.addEventListener('fetch',()=>{});"
+        return Response(content, mimetype='application/javascript')
 
 
 # Services API for dependent dropdown
