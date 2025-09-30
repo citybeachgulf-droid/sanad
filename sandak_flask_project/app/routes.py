@@ -5,13 +5,21 @@ from datetime import datetime, timedelta
 from app import db
 from app.models import Transaction, ManagedTransaction, User, Income, Client
 
-<<<<<<< HEAD
+
 # ------------------- Main Blueprint -------------------
 main_bp = Blueprint('main', __name__)
-=======
+
 # تعيين url_prefix بشكل صريح لتفادي تعارضات مستقبلية مع المسارات
 main_bp = Blueprint('main', __name__, url_prefix='')
->>>>>>> f19f62dd5a61e953a51ae765324a4fddb35e1232
+
+# تعيين url_prefix بشكل صريح لتفادي تعارضات مستقبلية مع المسارات
+main_bp = Blueprint('main', __name__, url_prefix='')
+
+
+@main_bp.route('/')
+def index():
+    return render_template('index.html')
+
 
 @main_bp.route('/dashboard')
 @login_required
