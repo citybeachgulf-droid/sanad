@@ -465,6 +465,9 @@ def update_transaction_status(transaction_id):
     due_date_raw = (request.form.get('due_date') or '').strip()
     if assigned_to:
         row.assigned_to = assigned_to
+    elif row.assigned_to is None:
+        # Auto-assign to the acting employee on first update when not explicitly set
+        row.assigned_to = current_user.id
     if due_date_raw:
         try:
             row.due_date = datetime.fromisoformat(due_date_raw)

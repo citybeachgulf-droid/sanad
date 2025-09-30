@@ -13,6 +13,24 @@
       <div class="col-md-6"><strong>التاريخ:</strong> {{ rec.created_at }}</div>
       <div class="col-md-12"><strong>ملاحظات:</strong> {{ rec.notes or '-' }}</div>
     </div>
+    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+    <hr>
+    <form method="post" action="{{ url_for('admin.transaction_reassign', record_id=rec.id) }}" class="mt-2">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label small">نقل المعاملة إلى موظف</label>
+          <select class="form-select" name="employee_id" required>
+            {% for u in employees %}
+            <option value="{{ u.id }}" {{ 'selected' if rec.employee_id==u.id else '' }}>{{ u.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-outline-primary w-100" type="submit">نقل</button>
+        </div>
+      </div>
+    </form>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
