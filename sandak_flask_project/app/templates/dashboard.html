@@ -161,7 +161,7 @@
             <th class="d-none d-md-table-cell">المسؤول</th>
             <th class="d-none d-lg-table-cell">تاريخ الإنشاء</th>
             <th class="d-none d-lg-table-cell">الموعد النهائي</th>
-            <th style="width:220px">إجراءات</th>
+            <th style="width:200px">تعيين/إتمام</th>
           </tr>
         </thead>
         <tbody>
@@ -180,24 +180,20 @@
             <td class="text-muted small d-none d-lg-table-cell">{{ t.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
             <td class="text-muted small d-none d-lg-table-cell">{{ t.due_date.strftime('%Y-%m-%d %H:%M') if t.due_date else '-' }}</td>
             <td>
-              <!-- تحديث المعاملة -->
+              <!-- تعيين المسؤول -->
               <form class="d-inline" method="post" action="{{ url_for('main.update_transaction_status', transaction_id=t.id) }}">
-                <div class="d-flex gap-2 flex-wrap">
-                  <select class="form-select form-select-sm" name="status" style="width: 140px;">
-                    <option value="new" {{ 'selected' if t.status=='new' else '' }}>جديدة</option>
-                    <option value="in_progress" {{ 'selected' if t.status=='in_progress' else '' }}>تحت الإجراء</option>
-                    <option value="completed" {{ 'selected' if t.status=='completed' else '' }}>منتهية</option>
-                  </select>
-                  <select class="form-select form-select-sm" name="assigned_to" style="width: 140px;">
+                <div class="d-flex gap-2 flex-wrap align-items-center">
+                  <input type="hidden" name="status" value="{{ t.status }}">
+                  <select class="form-select form-select-sm" name="assigned_to" style="width: 160px;">
                     <option value="">بدون تعيين</option>
                     {% for emp in employees %}
                     <option value="{{ emp.id }}" {{ 'selected' if t.assigned_to==emp.id else '' }}>{{ emp.username }}</option>
                     {% endfor %}
                   </select>
-                  <input type="datetime-local" class="form-control form-control-sm" name="due_date" value="{{ t.due_date.strftime('%Y-%m-%dT%H:%M') if t.due_date else '' }}" style="width: 200px;">
-                  <button class="btn btn-sm btn-primary" type="submit">تحديث</button>
+                  <button class="btn btn-sm btn-outline-primary" type="submit">حفظ</button>
                 </div>
               </form>
+              <!-- إتمام المعاملة -->
               <form class="d-inline ms-1" method="post" action="{{ url_for('main.update_transaction_status', transaction_id=t.id) }}">
                 <input type="hidden" name="status" value="completed">
                 <button class="btn btn-sm btn-success" type="submit">إتمام</button>
