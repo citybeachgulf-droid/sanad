@@ -67,14 +67,14 @@ class Transaction(db.Model):
     office = db.Column(db.String(100))
     service_type = db.Column(db.String(150))
     # new | in_progress | completed | overdue
-    status = db.Column(db.String(50), default='new')
+    status = db.Column(db.String(50), default='in_progress')
     fee = db.Column(db.Numeric(12,2), default=0)
     details = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Enhancements
     assigned_to = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     due_date = db.Column(db.DateTime, nullable=True)
-    started_at = db.Column(db.DateTime, nullable=True)
+    started_at = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
     completed_at = db.Column(db.DateTime, nullable=True)
     delay_reason = db.Column(db.Text, nullable=True)
 

@@ -421,7 +421,26 @@ def transactions_list():
 @admin_required
 def transaction_detail(record_id):
     rec = TransactionRecord.query.get_or_404(record_id)
-    return render_template('admin/transaction_detail.html', rec=rec)
+    employees = User.query.order_by(User.username.asc()).all()
+    return render_template('admin/transaction_detail.html', rec=rec, employees=employees)
+
+
+@admin_bp.route('/transactions/<int:record_id>/reassign', methods=['POST'])
+@admin_required
+def transaction_reassign(record_id):
+    rec = TransactionRecord.query.get_or_404(record_id)
+    new_emp_id = request.form.get('employee_id', type=int)
+    if not new_emp_id:
+        flash('يرجى اختيار الموظف', 'warning')
+        return redirect(url_for('admin.transaction_detail', record_id=record_id))
+    user = User.query.get(new_emp_id)
+    if not user:
+        flash('الموظف غير موجود', 'danger')
+        return redirect(url_for('admin.transaction_detail', record_id=record_id))
+    rec.employee_id = user.id
+    db.session.commit()
+    flash('تم نقل المعاملة إلى موظف آخر', 'success')
+    return redirect(url_for('admin.transaction_detail', record_id=record_id))
 
 
 # Settings

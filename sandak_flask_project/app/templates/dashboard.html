@@ -198,6 +198,10 @@
                   <button class="btn btn-sm btn-primary" type="submit">تحديث</button>
                 </div>
               </form>
+              <form class="d-inline ms-1" method="post" action="{{ url_for('main.update_transaction_status', transaction_id=t.id) }}">
+                <input type="hidden" name="status" value="completed">
+                <button class="btn btn-sm btn-success" type="submit">إتمام</button>
+              </form>
             </td>
           </tr>
           {% else %}

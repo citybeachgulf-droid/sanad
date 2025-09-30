@@ -57,7 +57,7 @@ def create_app(config_class=Config):
                 if 'delay_reason' not in tr2_cols:
                     conn.execute(text("ALTER TABLE transaction ADD COLUMN delay_reason TEXT"))
                 if 'status' not in tr2_cols:
-                    conn.execute(text("ALTER TABLE transaction ADD COLUMN status VARCHAR(50) DEFAULT 'new'"))
+                    conn.execute(text("ALTER TABLE transaction ADD COLUMN status VARCHAR(50) DEFAULT 'in_progress'"))
 
                 # Create new tables if not exists
                 conn.execute(text("""
