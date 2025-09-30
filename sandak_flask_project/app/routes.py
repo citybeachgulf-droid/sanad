@@ -456,6 +456,9 @@ def update_transaction_status(transaction_id):
         return redirect(url_for('main.dashboard'))
 
     status = (request.form.get('status') or '').strip()
+    # Coerce any attempt to set 'new' to 'in_progress'
+    if status == 'new':
+        status = 'in_progress'
     if status not in ('new', 'in_progress', 'completed'):
         flash('حالة غير صالحة', 'danger')
         return redirect(url_for('main.dashboard'))
