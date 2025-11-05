@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4>الخدمات</h4>
+  <a href="{{ url_for('services.new_service') }}" class="btn btn-primary">+ خدمة جديدة</a>
+</div>
+<table class="table table-striped bg-white">
+  <thead><tr><th>#</th><th>الخدمة</th><th>الجهة</th><th>أتعاب المكتب</th><th>نوع رسوم الحكومة</th><th>قيمة رسوم الحكومة</th><th>VAT</th></tr></thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.name }}</td>
+      <td>{{ r.gov_entity or '-' }}</td>
+      <td>{{ '%.2f'|format(r.office_fee) }}</td>
+      <td>{{ r.gov_fee_type }}</td>
+      <td>{{ '%.2f'|format(r.gov_fee_value) }}</td>
+      <td>{{ 'نعم' if r.vat_applicable else 'لا' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

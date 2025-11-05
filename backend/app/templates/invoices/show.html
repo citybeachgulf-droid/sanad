@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card p-3">
+  <h5>فاتورة #{{ inv.id }}</h5>
+  <p>للعميل: {{ inv.customer.full_name }}</p>
+  <table class="table">
+    <thead>
+      <tr><th>الخدمة</th><th>الكمية</th><th>أتعاب المكتب</th><th>VAT</th><th>رسوم الحكومة</th><th>الإجمالي</th></tr>
+    </thead>
+    <tbody>
+      {% for it in inv.items %}
+      <tr>
+        <td>{{ it.service.name }}</td>
+        <td>{{ it.qty }}</td>
+        <td>{{ '%.2f'|format(it.office_fee) }}</td>
+        <td>{{ '%.2f'|format(it.vat_amount) }}</td>
+        <td>{{ '%.2f'|format(it.gov_fee) }}</td>
+        <td>{{ '%.2f'|format(it.line_total) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr><th colspan="2"></th><th>مجموع أتعاب المكتب</th><td colspan="3">{{ '%.2f'|format(inv.subtotal_office_fee) }}</td></tr>
+      <tr><th colspan="2"></th><th>VAT</th><td colspan="3">{{ '%.2f'|format(inv.vat_amount) }}</td></tr>
+      <tr><th colspan="2"></th><th>رسوم الحكومة (تحصيل بالنيابة)</th><td colspan="3">{{ '%.2f'|format(inv.total_gov_fees) }}</td></tr>
+      <tr><th colspan="2"></th><th>الإجمالي</th><td colspan="3"><b>{{ '%.2f'|format(inv.grand_total) }}</b></td></tr>
+    </tfoot>
+  </table>
+</div>
+{% endblock %}
